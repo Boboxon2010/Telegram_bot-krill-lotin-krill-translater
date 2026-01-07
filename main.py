@@ -1,7 +1,8 @@
-# main.py - GITHUB VERSIYASI (TOKEN XAVFSIZ)
+# main.py - TO'G'RI VERSIYA
 import sys
 import os
 import telebot
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 print("=== BOTNI SOZLASH ===")
 
@@ -43,7 +44,7 @@ def get_token():
 TOKEN = get_token()
 print(f"🔐 Token muvaffaqiyatli yuklandi")
 
-# =========== QOLGAN KOD (O'ZGARMASIN) ===========
+# =========== QOLGAN KOD ===========
 
 # 1. TO'G'RI PAPKA YO'LINI BELGILASH
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -71,27 +72,85 @@ except Exception as e:
     print(f"❌ uz_trans.py yuklashda xato: {e}")
     exit(1)
 
-# 3. Botni ishga tushirish
+# 3. Botni yaratish
 ADMIN_ID = 1051632082
-
 bot = telebot.TeleBot(TOKEN)
+
+# 4. Web App URL
+WEB_APP_URL = "https://telegram-bot-krill-lotin-krill-translater.onrender.com"
+
+# =========== BOT HANDLERS ===========
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    welcome = """
-👋 *Assalomu alaykum! Kirill-Lotin botiga xush kelibsiz!*
+    # Inline keyboard yaratish
+    markup = InlineKeyboardMarkup()
+    
+    # Web App tugmasi
+    web_app_btn = InlineKeyboardButton(
+        text="🌐 Web App'ni ochish", 
+        web_app=telebot.types.WebAppInfo(url=WEB_APP_URL)
+    )
+    
+    # Yordam tugmasi
+    help_btn = InlineKeyboardButton(
+        text="❓ Qanday ishlatish", 
+        callback_data="help_info"
+    )
+    
+    markup.add(web_app_btn)
+    markup.add(help_btn)
+    
+    welcome = f"""
+👋 *Assalomu alaykum, {message.from_user.first_name}!*
 
-📝 *Menga matn yuboring:*
-• Lotin alifbosida bo'lsa → Kirill alifbosiga
-• Kirill alifbosida bo'lsa → Lotin alifbosiga o'giraman.
+🤖 *Kirill-Lotin AI Translater* botiga xush kelibsiz!
 
-*Namunalar:*
-"Salom" → "Салом"
-"Ўзбекистон" → "O'zbekiston"
+✨ *YANGI!* Endi sizda **Web App** mavjud:
 
-🌐 *Web App:* Serverda mavjud
+🌐 *Web App afzalliklari:*
+• Chiroyli interfeys
+• Tezkor konvertatsiya  
+• Natijani nusxalash
+• Tugmalar orqali oson ishlash
+• Kompyuter va telefon uchun
+
+📱 *Oddiy ishlash:* Faqat matn yuboring
+🌐 *Web App:* Tugma bosish kifoya!
+
+*Barchasi bir joyda!* 🚀
 """
-    bot.reply_to(message, welcome, parse_mode='Markdown')
+    
+    bot.send_message(
+        message.chat.id,
+        welcome,
+        parse_mode='Markdown',
+        reply_markup=markup
+    )
+
+# Callback handler
+@bot.callback_query_handler(func=lambda call: True)
+def callback_query(call):
+    if call.data == "help_info":
+        help_text = """
+🆘 *Qanday ishlatish?*
+
+*Bot orqali:*
+1. Faqat matn yuboring
+2. Bot avtomatik aniqlab konvertatsiya qiladi
+
+*Web App orqali:*
+1. "🌐 Web App'ni ochish" tugmasini bosing
+2. Matnni kiritish maydoniga yozing
+3. "Lotin → Kirill" yoki "Kirill → Lotin" tugmasini bosing
+4. Natijani nusxalash tugmasi bilan nusxalang
+
+*Qaysi biri yaxshi?*
+📱 *Bot:* Tezkor, oddiy matnlar uchun
+🌐 *Web App:* Ko'proq funksiyalar, chiroyli interfeys
+"""
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, help_text, parse_mode='Markdown')
 
 @bot.message_handler(commands=['test'])
 def test_bot(message):
@@ -111,6 +170,31 @@ Qayta lotin: `{latin}`
         bot.reply_to(message, result, parse_mode='Markdown')
     except Exception as e:
         bot.reply_to(message, f"❌ Testda xato: {str(e)}")
+
+# Web App uchun alohida handler
+@bot.message_handler(commands=['webapp'])
+def send_webapp_link(message):
+    markup = InlineKeyboardMarkup()
+    
+    web_app_btn = InlineKeyboardButton(
+        text="🌐 Web App'ni ochish", 
+        web_app=telebot.types.WebAppInfo(url=WEB_APP_URL)
+    )
+    
+    open_in_browser = InlineKeyboardButton(
+        text="🔗 Brauzerda ochish",
+        url=WEB_APP_URL
+    )
+    
+    markup.add(web_app_btn)
+    markup.add(open_in_browser)
+    
+    bot.send_message(
+        message.chat.id,
+        f"🌐 *Web App manzili:*\n\n`{WEB_APP_URL}`\n\nTugma orqali ochishingiz mumkin:",
+        parse_mode='Markdown',
+        reply_markup=markup
+    )
 
 @bot.message_handler(func=lambda message: True)
 def convert_text(message):
@@ -138,7 +222,7 @@ def convert_text(message):
         error_text = f"❌ *Xatolik yuz berdi:*\n\n`{str(e)}`"
         bot.reply_to(message, error_text, parse_mode='Markdown')
 
-# 4. Botni ishga tushirish
+# 5. Botni ishga tushirish
 if __name__ == "__main__":
     print("\n" + "="*50)
     print("🤖 BOT ISHGA TUSHMOQDA...")
