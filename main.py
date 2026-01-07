@@ -1,18 +1,24 @@
-# main.py - TO'G'RI VERSIYA
+# main.py - TO'LIQ VERSIYA BARCHA FUNKSIYALAR BILAN
 import sys
 import os
+import json
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from datetime import datetime
+import tempfile
+import uuid
 
-print("=== BOTNI SOZLASH ===")
+print("=== KIRILL-LOTIN AI TRANSLATER BOT ===")
 
-# =========== TOKEN OLISH (XAVFSIZ) ===========
+# =========== SOZLAMALAR ===========
+ADMIN_IDS = [1051632082]  # Admin ID lari
+WEB_APP_URL = "https://telegram-bot-krill-lotin-krill-translater.onrender.com"
+HISTORY_FILE = 'history.json'
+STATS_FILE = 'stats.json'
+
+# =========== TOKEN OLISH ===========
 def get_token():
-    """
-    Tokenni faqat environment variable yoki .env faylidan olish
-    KODDA HECH QANDAY TOKEN YO'Q!
-    """
-    
+    """Tokenni xavfsiz olish"""
     # 1. Environment variable dan
     token = os.environ.get("BOT_TOKEN")
     if token:
@@ -30,107 +36,537 @@ def get_token():
     except ImportError:
         pass
     
-    # 3. TOKEN TOPILMADI - FAKAT SERVERDA ISHLASHI KERAK
+    # 3. TOKEN TOPILMADI
     print("❌ XATO: BOT_TOKEN topilmadi!")
-    print("=======================================")
-    print("QO'LLANMA:")
-    print("1. Render.com da: Environment Variables > BOT_TOKEN")
-    print("2. Localda: .env fayl yarating yoki BOT_TOKEN o'zgaruvchisi")
-    print("3. Token: BotFather dan /token buyrug'i bilan oling")
-    print("=======================================")
     sys.exit(1)
 
-# Tokenni xavfsiz olish
+# =========== BOTNI YARATISH ===========
 TOKEN = get_token()
-print(f"🔐 Token muvaffaqiyatli yuklandi")
+bot = telebot.TeleBot(TOKEN)
+print("✅ Bot yaratildi")
 
-# =========== QOLGAN KOD ===========
-
-# 1. TO'G'RI PAPKA YO'LINI BELGILASH
-script_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(script_dir)
-print(f"📂 Joriy papka: {os.getcwd()}")
-
-# 2. uz_trans.py ni yuklash
+# =========== TRANSLITERATION FUNKSIYALARI ===========
 try:
     with open('uz_trans.py', 'r', encoding='utf-8') as f:
         exec(f.read(), globals())
-    print("✅ uz_trans.py yuklandi!")
-    
-    # Test
-    if 'to_cyrillic' in globals():
-        test_result = to_cyrillic("Salom")
-        print(f"✅ Test muvaffaqiyatli: 'Salom' -> '{test_result}'")
-    else:
-        sys.path.insert(0, script_dir)
-        import uz_trans
-        globals()['to_cyrillic'] = uz_trans.to_cyrillic
-        globals()['to_latin'] = uz_trans.to_latin
-        print("✅ Modul sifatida import qilindi!")
-        
+    print("✅ Transliteration funksiyalari yuklandi")
 except Exception as e:
     print(f"❌ uz_trans.py yuklashda xato: {e}")
     exit(1)
 
-# 3. Botni yaratish
-ADMIN_ID = 1051632082
-bot = telebot.TeleBot(TOKEN)
+# =========== YORDAMCHI FUNKSIYALAR ===========
+def is_admin(user_id):
+    """Admin tekshirish"""
+    return user_id in ADMIN_IDS
 
-# 4. Web App URL
-WEB_APP_URL = "https://telegram-bot-krill-lotin-krill-translater.onrender.com"
+def update_stats(user_id, action="conversion"):
+    """Statistikani yangilash"""
+    try:
+        if os.path.exists(STATS_FILE):
+            with open(STATS_FILE, 'r') as f:
+                stats = json.load(f)
+        else:
+            stats = {"total_conversions": 0, "users": {}, "actions": {}}
+        
+        stats["total_conversions"] = stats.get("total_conversions", 0) + 1
+        
+        user_key = str(user_id)
+        if user_key not in stats["users"]:
+            stats["users"][user_key] = 0
+        stats["users"][user_key] += 1
+        
+        # Harakatlar statistikasi
+        if action not in stats["actions"]:
+            stats["actions"][action] = 0
+        stats["actions"][action] += 1
+        
+        with open(STATS_FILE, 'w') as f:
+            json.dump(stats, f)
+    except:
+        pass
+
+def save_history(user_id, original, converted, direction):
+    """Tarixni saqlash"""
+    try:
+        if os.path.exists(HISTORY_FILE):
+            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+        else:
+            history = {}
+        
+        user_key = str(user_id)
+        if user_key not in history:
+            history[user_key] = []
+        
+        history[user_key].append({
+            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "original": original[:100],
+            "converted": converted[:100],
+            "direction": direction
+        })
+        
+        if len(history[user_key]) > 10:
+            history[user_key] = history[user_key][-10:]
+        
+        with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+    except:
+        pass
 
 # =========== BOT HANDLERS ===========
 
+# 1. START VA YORDAM
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    # Inline keyboard yaratish
-    markup = InlineKeyboardMarkup()
+    markup = InlineKeyboardMarkup(row_width=2)
     
-    # Web App tugmasi
-    web_app_btn = InlineKeyboardButton(
-        text="🌐 Web App'ni ochish", 
-        web_app=telebot.types.WebAppInfo(url=WEB_APP_URL)
-    )
+    buttons = [
+        InlineKeyboardButton("🌐 Web App", web_app=telebot.types.WebAppInfo(url=WEB_APP_URL)),
+        InlineKeyboardButton("❓ Yordam", callback_data="help_info"),
+        InlineKeyboardButton("👥 Guruh", callback_data="group_info"),
+        InlineKeyboardButton("📜 Tarix", callback_data="history_info"),
+        InlineKeyboardButton("📁 Fayl", callback_data="file_info"),
+        InlineKeyboardButton("🌍 Tarjima", callback_data="translate_info"),
+        InlineKeyboardButton("📊 Statistika", callback_data="stats_info"),
+        InlineKeyboardButton("⚙️ Admin", callback_data="admin_info")
+    ]
     
-    # Yordam tugmasi
-    help_btn = InlineKeyboardButton(
-        text="❓ Qanday ishlatish", 
-        callback_data="help_info"
-    )
-    
-    markup.add(web_app_btn)
-    markup.add(help_btn)
+    # Tugmalarni qatorlarga ajratish
+    for i in range(0, len(buttons), 2):
+        if i+1 < len(buttons):
+            markup.add(buttons[i], buttons[i+1])
+        else:
+            markup.add(buttons[i])
     
     welcome = f"""
 👋 *Assalomu alaykum, {message.from_user.first_name}!*
 
-🤖 *Kirill-Lotin AI Translater* botiga xush kelibsiz!
+🤖 *Kirill-Lotin AI Translater Plus* botiga xush kelibsiz!
 
-✨ *YANGI!* Endi sizda **Web App** mavjud:
+✨ *Mavjud funksiyalar:*
 
-🌐 *Web App afzalliklari:*
-• Chiroyli interfeys
-• Tezkor konvertatsiya  
-• Natijani nusxalash
-• Tugmalar orqali oson ishlash
-• Kompyuter va telefon uchun
+1️⃣ *Asosiy konvertatsiya:*
+   • Lotin ↔ Kirill avtomatik
+   • Faqat matn yuboring
 
-📱 *Oddiy ishlash:* Faqat matn yuboring
-🌐 *Web App:* Tugma bosish kifoya!
+2️⃣ *Yangi funksiyalar:*
+   • 📁 Fayllarni qabul qilish (.txt, .docx)
+   • 📜 Konvertatsiya tarixi
+   • 👥 Guruhlar uchun
+   • 🌍 Tarjima xizmati
+   • 📊 Statistika
 
-*Barchasi bir joyda!* 🚀
+3️⃣ *Web App:*
+   • Chiroyli interfeys
+   • Natijani nusxalash
+   • Tugmalar orqali oson ishlash
+
+*Buyruqlar:* /commands
+*Web App:* {WEB_APP_URL}
+
+🚀 *Hammasi bir joyda!*
 """
+    bot.send_message(message.chat.id, welcome, parse_mode='Markdown', reply_markup=markup)
+    update_stats(message.from_user.id, "start")
+
+# 2. BUYRUQLAR RO'YXATI
+@bot.message_handler(commands=['commands'])
+def commands_list(message):
+    commands_text = """
+📋 *Mavjud buyruqlar:*
+
+*Asosiy:*
+• /start, /help - Botni ishga tushirish
+• /test - Botni test qilish
+• /webapp - Web App manzili
+
+*Yangi funksiyalar:*
+• /group - Guruhga qo'shish
+• /history - Konvertatsiya tarixi
+• /stats - Statistika
+• /translate - Tarjima xizmati
+• /feedback - Fikr-mulohaza
+
+*Admin uchun:*
+• /admin - Admin paneli
+• /broadcast - Xabar yuborish
+• /export_stats - Statistika yuklash
+
+📁 *Fayl yuborish:* 
+Faqat .txt yoki .docx fayl yuboring
+"""
+    bot.reply_to(message, commands_text, parse_mode='Markdown')
+
+# 3. WEB APP
+@bot.message_handler(commands=['webapp'])
+def send_webapp_link(message):
+    markup = InlineKeyboardMarkup()
+    
+    web_app_btn = InlineKeyboardButton(
+        "🌐 Web App'ni ochish", 
+        web_app=telebot.types.WebAppInfo(url=WEB_APP_URL)
+    )
+    
+    open_in_browser = InlineKeyboardButton(
+        "🔗 Brauzerda ochish",
+        url=WEB_APP_URL
+    )
+    
+    markup.add(web_app_btn)
+    markup.add(open_in_browser)
     
     bot.send_message(
         message.chat.id,
-        welcome,
+        f"🌐 *Web App manzili:*\n\n`{WEB_APP_URL}`",
         parse_mode='Markdown',
         reply_markup=markup
     )
 
-# Callback handler
+# 4. GURUHLAR UCHUN
+@bot.message_handler(commands=['group'])
+def group_info(message):
+    group_text = """
+👥 *Guruhga qo'shish*
+
+Botni guruhga qo'shishingiz mumkin:
+
+1️⃣ Guruh sozlamalariga boring
+2️⃣ "Administratorlar" ni tanlang  
+3️⃣ "Administrator qo'shish" dan botni qidiring:
+   @translater_krill_latin_krill_bot
+4️⃣ Quyidagi huquqlarni bering:
+   ✅ Xabarlar yuborish
+   ✅ Matnlarni o'qish
+   ❌ Boshqa huquqlar (shart emas)
+
+✨ *Guruhda ishlash:*
+• Odamlar matn yuborsa, bot avtomatik javob beradi
+• /help - yordam ko'rsatadi
+• /webapp - Web App haqida
+• /commands - buyruqlar ro'yxati
+"""
+    bot.reply_to(message, group_text, parse_mode='Markdown')
+
+# 5. TARIX
+@bot.message_handler(commands=['history'])
+def show_history(message):
+    try:
+        if os.path.exists(HISTORY_FILE):
+            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+            
+            user_key = str(message.from_user.id)
+            if user_key in history and history[user_key]:
+                history_text = "📜 *Oxirgi 10 ta konvertatsiya:*\n\n"
+                
+                for i, item in enumerate(reversed(history[user_key]), 1):
+                    history_text += f"▫️ *{item['direction']}*\n"
+                    history_text += f"   ⏰ {item['time']}\n"
+                    history_text += f"   Kiruvchi: {item['original']}...\n"
+                    history_text += f"   Natija: {item['converted']}...\n\n"
+                
+                bot.reply_to(message, history_text, parse_mode='Markdown')
+            else:
+                bot.reply_to(message, "📜 Tarix bo'sh. Avval konvertatsiya qiling!")
+        else:
+            bot.reply_to(message, "📜 Tarix bo'sh. Avval konvertatsiya qiling!")
+    except:
+        bot.reply_to(message, "❌ Tarixni o'qishda xato!")
+
+# 6. STATISTIKA
+@bot.message_handler(commands=['stats'])
+def show_stats(message):
+    try:
+        if os.path.exists(STATS_FILE):
+            with open(STATS_FILE, 'r') as f:
+                stats = json.load(f)
+        else:
+            stats = {"total_conversions": 0, "users": {}, "actions": {}}
+        
+        total = stats.get("total_conversions", 0)
+        users = len(stats.get("users", {}))
+        
+        # Top 5 foydalanuvchi
+        top_users = sorted(
+            stats.get("users", {}).items(), 
+            key=lambda x: x[1], 
+            reverse=True
+        )[:5]
+        
+        stats_text = f"""
+📊 *Bot statistikasi:*
+
+• Jami konvertatsiyalar: {total}
+• Foydalanuvchilar soni: {users}
+• Server holati: ✅ Faol
+• Web App: ✅ Faol
+
+🏆 *Top 5 foydalanuvchi:*
+"""
+        for i, (user_id, count) in enumerate(top_users, 1):
+            stats_text += f"{i}. ID: {user_id[:8]}... - {count} marta\n"
+        
+        bot.reply_to(message, stats_text, parse_mode='Markdown')
+    except:
+        bot.reply_to(message, "📊 Statistika hali to'planmagan")
+
+# 7. FAYL QABUL QILISH
+@bot.message_handler(content_types=['document'])
+def handle_document(message):
+    try:
+        file_info = bot.get_file(message.document.file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+        
+        file_name = message.document.file_name
+        file_ext = file_name.split('.')[-1].lower() if '.' in file_name else ''
+        
+        if file_ext not in ['txt', 'docx']:
+            bot.reply_to(message, "❌ Faqat .txt va .docx fayllarni qabul qilamiz!")
+            return
+        
+        # Faylni saqlash
+        temp_file = f"temp_{uuid.uuid4()}.{file_ext}"
+        with open(temp_file, 'wb') as f:
+            f.write(downloaded_file)
+        
+        # Faylni o'qish
+        with open(temp_file, 'r', encoding='utf-8', errors='ignore') as f:
+            content = f.read()
+        
+        if len(content) > 5000:
+            bot.reply_to(message, "❌ Fayl juda katta (5000 belgidan oshmasin)")
+            os.remove(temp_file)
+            return
+        
+        # Konvertatsiya
+        if any('\u0400' <= char <= '\u04FF' for char in content):
+            converted = to_latin(content)
+            direction = "Kirill → Lotin"
+        else:
+            converted = to_cyrillic(content)
+            direction = "Lotin → Kirill"
+        
+        # Natijani faylga yozish
+        result_file = f"converted_{file_name}"
+        with open(result_file, 'w', encoding='utf-8') as f:
+            f.write(converted)
+        
+        # Yuborish
+        with open(result_file, 'rb') as f:
+            bot.send_document(
+                message.chat.id, 
+                f, 
+                caption=f"✅ {direction}\n📁 Fayl: {file_name}\n📏 Uzunlik: {len(content)} belgi"
+            )
+        
+        # Tozalash
+        os.remove(temp_file)
+        os.remove(result_file)
+        
+        update_stats(message.from_user.id, "file_conversion")
+        save_history(message.from_user.id, content[:50], converted[:50], direction)
+        
+    except Exception as e:
+        bot.reply_to(message, f"❌ Xato: {str(e)[:100]}")
+
+# 8. TARJIMA XIZMATI
+try:
+    from deep_translator import GoogleTranslator
+    
+    LANGUAGES = {
+        '🇺🇿 O\'zbek': 'uz',
+        '🇷🇺 Rus': 'ru', 
+        '🇺🇸 Ingliz': 'en',
+        '🇹🇷 Turk': 'tr',
+        '🇰🇿 Qozoq': 'kk',
+        '🇸🇦 Arab': 'ar',
+        '🇨🇳 Xitoy': 'zh-cn',
+        '🇰🇷 Koreys': 'ko',
+        '🇯🇵 Yapon': 'ja',
+        '🇩🇪 Nemis': 'de',
+        '🇫🇷 Fransuz': 'fr',
+        '🇪🇸 Ispan': 'es'
+    }
+    
+    @bot.message_handler(commands=['translate'])
+    def translate_command(message):
+        markup = InlineKeyboardMarkup(row_width=2)
+        
+        buttons = []
+        for lang_name, lang_code in LANGUAGES.items():
+            btn = InlineKeyboardButton(lang_name, callback_data=f"translate_{lang_code}")
+            buttons.append(btn)
+        
+        for i in range(0, len(buttons), 2):
+            if i+1 < len(buttons):
+                markup.add(buttons[i], buttons[i+1])
+            else:
+                markup.add(buttons[i])
+        
+        help_text = """
+🌍 *Tarjima qilish*
+
+1. Matn yuboring
+2. Tugmalardan tilni tanlang
+3. Bot tarjima qiladi
+
+✨ *Qo'llab-quvvatlanadigan tillar:*
+• O'zbek, Rus, Ingliz
+• Turk, Qozoq, Arab
+• Xitoy, Koreys, Yapon
+• Nemis, Fransuz, Ispan
+"""
+        bot.reply_to(message, help_text, parse_mode='Markdown', reply_markup=markup)
+    
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('translate_'))
+    def translate_callback(call):
+        lang_code = call.data.split('_')[1]
+        
+        msg = bot.send_message(
+            call.message.chat.id, 
+            f"🌍 Tanlangan til: {lang_code}\n\nTarjima qilish uchun matn yuboring:"
+        )
+        
+        bot.register_next_step_handler(msg, process_translation, lang_code)
+        bot.answer_callback_query(call.id)
+    
+    def process_translation(message, lang_code):
+        try:
+            text = message.text[:500]  # 500 belgigacha
+            
+            translator = GoogleTranslator(source='auto', target=lang_code)
+            translated = translator.translate(text)
+            
+            # Manba tilni aniqlash
+            source_lang = GoogleTranslator(source='auto', target='en').detect(text)
+            
+            response = f"""
+🌐 *Tarjima natijasi:*
+
+📝 *Asl matn ({source_lang}):*
+`{text}`
+
+🔤 *Tarjima ({lang_code}):*
+`{translated}`
+
+💬 *Uzunligi:* {len(text)} → {len(translated)} belgi
+"""
+            bot.reply_to(message, response, parse_mode='Markdown')
+            update_stats(message.from_user.id, "translation")
+            
+        except Exception as e:
+            bot.reply_to(message, f"❌ Tarjimada xato: {str(e)[:100]}")
+
+except ImportError:
+    @bot.message_handler(commands=['translate'])
+    def translate_command(message):
+        bot.reply_to(message, "❌ Tarjima xizmati hozircha mavjud emas. requirements.txt ga 'deep-translator' qo'shing.")
+
+# 9. ADMIN PANELI
+@bot.message_handler(commands=['admin'])
+def admin_panel(message):
+    if not is_admin(message.from_user.id):
+        bot.reply_to(message, "❌ Bu buyruq faqat adminlar uchun!")
+        return
+    
+    try:
+        with open(STATS_FILE, 'r') as f:
+            stats = json.load(f)
+    except:
+        stats = {"total_conversions": 0, "users": {}, "actions": {}}
+    
+    total = stats.get("total_conversions", 0)
+    users = len(stats.get("users", {}))
+    
+    admin_text = f"""
+⚙️ *Admin Panel*
+
+📊 *Statistika:*
+• Jami konvertatsiyalar: {total}
+• Foydalanuvchilar soni: {users}
+
+🛠️ *Admin buyruqlari:*
+• /broadcast - Barchaga xabar yuborish
+• /export_stats - Statistika yuklab olish
+• /restart - Botni qayta ishga tushirish
+"""
+    bot.reply_to(message, admin_text, parse_mode='Markdown')
+
+@bot.message_handler(commands=['broadcast'])
+def broadcast_message(message):
+    if not is_admin(message.from_user.id):
+        bot.reply_to(message, "❌ Bu buyruq faqat adminlar uchun!")
+        return
+    
+    msg = bot.reply_to(message, "📢 Broadcast xabarini yuboring:")
+    bot.register_next_step_handler(msg, process_broadcast)
+
+def process_broadcast(message):
+    try:
+        if os.path.exists(STATS_FILE):
+            with open(STATS_FILE, 'r') as f:
+                stats = json.load(f)
+            
+            users = list(stats.get("users", {}).keys())
+            success = 0
+            failed = 0
+            
+            for user_id in users[:10]:  # Test uchun faqat 10 taga
+                try:
+                    bot.send_message(user_id, f"📢 *Broadcast:*\n\n{message.text}", parse_mode='Markdown')
+                    success += 1
+                except:
+                    failed += 1
+            
+            bot.reply_to(message, f"✅ Broadcast yuborildi:\nMuvaffaqiyatli: {success}\nMuvaffaqiyatsiz: {failed}")
+        else:
+            bot.reply_to(message, "❌ Statistika fayli topilmadi")
+    except Exception as e:
+        bot.reply_to(message, f"❌ Xato: {str(e)}")
+
+# 10. ASOSIY KONVERTATSIYA
+@bot.message_handler(func=lambda message: True)
+def convert_text(message):
+    """Asosiy konvertatsiya funksiyasi"""
+    text = message.text
+    
+    if text.startswith('/'):
+        return
+    
+    # Uzun matn tekshiruvi
+    if len(text) > 1000:
+        bot.reply_to(message, "❌ Matn juda uzun (1000 belgidan oshmasin)")
+        return
+    
+    try:
+        # Matn kirill yoki lotin ekanligini aniqlash
+        if any('\u0400' <= char <= '\u04FF' for char in text):
+            converted = to_latin(text)
+            direction = "Kirill → Lotin"
+        else:
+            converted = to_cyrillic(text)
+            direction = "Lotin → Kirill"
+        
+        response_text = f"""
+{direction}:
+
+`{converted}`
+
+📏 Uzunlik: {len(text)} → {len(converted)} belgi
+"""
+        bot.reply_to(message, response_text, parse_mode='Markdown')
+        
+        # Statistikani yangilash
+        update_stats(message.from_user.id)
+        save_history(message.from_user.id, text[:50], converted[:50], direction)
+        
+    except Exception as e:
+        error_text = f"❌ *Xatolik yuz berdi:*\n\n`{str(e)[:100]}`"
+        bot.reply_to(message, error_text, parse_mode='Markdown')
+
+# 11. CALLBACK HANDLERS
 @bot.callback_query_handler(func=lambda call: True)
-def callback_query(call):
+def callback_handler(call):
     if call.data == "help_info":
         help_text = """
 🆘 *Qanday ishlatish?*
@@ -139,22 +575,52 @@ def callback_query(call):
 1. Faqat matn yuboring
 2. Bot avtomatik aniqlab konvertatsiya qiladi
 
-*Web App orqali:*
-1. "🌐 Web App'ni ochish" tugmasini bosing
-2. Matnni kiritish maydoniga yozing
-3. "Lotin → Kirill" yoki "Kirill → Lotin" tugmasini bosing
-4. Natijani nusxalash tugmasi bilan nusxalang
+*Fayl orqali:*
+1. .txt yoki .docx fayl yuboring
+2. Bot avtomatik konvertatsiya qiladi
 
-*Qaysi biri yaxshi?*
-📱 *Bot:* Tezkor, oddiy matnlar uchun
-🌐 *Web App:* Ko'proq funksiyalar, chiroyli interfeys
+*Web App orqali:*
+1. "🌐 Web App" tugmasini bosing
+2. Matnni kiritish maydoniga yozing
+3. Tugmalar orqali konvertatsiya qiling
+
+*Qo'shimcha:*
+• /history - Tarixni ko'rish
+• /stats - Statistika
+• /translate - Tarjima xizmati
 """
         bot.answer_callback_query(call.id)
         bot.send_message(call.message.chat.id, help_text, parse_mode='Markdown')
+    
+    elif call.data == "group_info":
+        bot.answer_callback_query(call.id)
+        group_info(call.message)
+    
+    elif call.data == "history_info":
+        bot.answer_callback_query(call.id)
+        show_history(call.message)
+    
+    elif call.data == "stats_info":
+        bot.answer_callback_query(call.id)
+        show_stats(call.message)
+    
+    elif call.data == "file_info":
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, 
+            "📁 *Fayl yuborish:*\n\nFaqat .txt yoki .docx fayl yuboring. Bot avtomatik konvertatsiya qiladi.",
+            parse_mode='Markdown')
+    
+    elif call.data == "translate_info":
+        bot.answer_callback_query(call.id)
+        translate_command(call.message)
+    
+    elif call.data == "admin_info":
+        bot.answer_callback_query(call.id)
+        admin_panel(call.message)
 
+# 12. TEST BUYRUQ'I
 @bot.message_handler(commands=['test'])
 def test_bot(message):
-    """Bot funksiyalarini test qilish"""
     try:
         test_text = "Salom O'zbekiston"
         kirill = to_cyrillic(test_text)
@@ -171,61 +637,12 @@ Qayta lotin: `{latin}`
     except Exception as e:
         bot.reply_to(message, f"❌ Testda xato: {str(e)}")
 
-# Web App uchun alohida handler
-@bot.message_handler(commands=['webapp'])
-def send_webapp_link(message):
-    markup = InlineKeyboardMarkup()
-    
-    web_app_btn = InlineKeyboardButton(
-        text="🌐 Web App'ni ochish", 
-        web_app=telebot.types.WebAppInfo(url=WEB_APP_URL)
-    )
-    
-    open_in_browser = InlineKeyboardButton(
-        text="🔗 Brauzerda ochish",
-        url=WEB_APP_URL
-    )
-    
-    markup.add(web_app_btn)
-    markup.add(open_in_browser)
-    
-    bot.send_message(
-        message.chat.id,
-        f"🌐 *Web App manzili:*\n\n`{WEB_APP_URL}`\n\nTugma orqali ochishingiz mumkin:",
-        parse_mode='Markdown',
-        reply_markup=markup
-    )
-
-@bot.message_handler(func=lambda message: True)
-def convert_text(message):
-    """Asosiy konvertatsiya funksiyasi"""
-    text = message.text
-    
-    # Buyruqlarni chetlab o'tish
-    if text.startswith('/'):
-        return
-    
-    try:
-        # Matn kirill yoki lotin ekanligini aniqlash
-        if any('\u0400' <= char <= '\u04FF' for char in text):
-            # Kirill -> Lotin
-            converted = to_latin(text)
-            response_text = f"🔤 *Lotin alifbosida:*\n\n`{converted}`"
-        else:
-            # Lotin -> Kirill
-            converted = to_cyrillic(text)
-            response_text = f"🔤 *Kirill alifbosida:*\n\n`{converted}`"
-        
-        bot.reply_to(message, response_text, parse_mode='Markdown')
-        
-    except Exception as e:
-        error_text = f"❌ *Xatolik yuz berdi:*\n\n`{str(e)}`"
-        bot.reply_to(message, error_text, parse_mode='Markdown')
-
-# 5. Botni ishga tushirish
+# =========== BOTNI ISHGA TUSHIRISH ===========
 if __name__ == "__main__":
     print("\n" + "="*50)
-    print("🤖 BOT ISHGA TUSHMOQDA...")
+    print("🚀 BOT ISHGA TUSHMOQDA...")
+    print(f"🤖 Bot: @translater_krill_latin_krill_bot")
+    print(f"🌐 Web App: {WEB_APP_URL}")
     print("="*50)
     
     try:
