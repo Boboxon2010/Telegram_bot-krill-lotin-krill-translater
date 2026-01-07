@@ -611,7 +611,7 @@ Agar bot sizga yoqgan bo'lsa:
 • Do'stlaringizga ulashing
 • Guruhga qo'shing
 
-🤝 *Dasturchi:* @boboxjon
+🤝 *Dasturchi:* @Boboxon_Jumaboyev
 """
     bot.reply_to(message, rate_text, parse_mode='Markdown', reply_markup=markup)
 
@@ -724,7 +724,7 @@ def callback_handler(call):
             "1. Botni baholang: /rate\n"
             "2. Do'stlarga ulashing: /share\n"
             "3. Guruhga qo'shing: /group\n\n"
-            "🤝 *Dasturchi:* @boboxjon",
+            "🤝 *Dasturchi:* @Boboxon_Jumaboyev",
             parse_mode='Markdown')
     
     # Admin paneli (faqat admin uchun)
@@ -795,7 +795,7 @@ def feedback_command(message):
 📝 *Fikr-mulohaza*
 
 Agar taklif yoki shikoyatingiz bo'lsa:
-• @boboxjon ga yozing
+• @Boboxon_Jumaboyev ga yozing
 • Yoki shu yerda yozib qoldiring
 
 Botni yaxshilashda yordamingiz uchun rahmat! 🙏
