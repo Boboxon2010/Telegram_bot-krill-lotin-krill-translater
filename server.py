@@ -1,0 +1,20 @@
+from flask import Flask, send_file
+import os
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return send_file('webapp.html')
+
+@app.route('/webapp')
+def webapp():
+    return send_file('webapp.html')
+
+@app.route('/health')
+def health():
+    return {'status': 'ok', 'service': 'kirill-lotin-bot'}
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
