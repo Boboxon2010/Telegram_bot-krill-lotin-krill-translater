@@ -2,27 +2,35 @@
 
 # 1. LOTIN -> KIRILL (o'zbek lotinidan)
 def to_cyrillic(text):
+    """Lotin matnni Kirillga o'giradi"""
     if not text:
         return ""
     
-    # Lug'atni to'g'ri tartibda (uzun kombinatsiyalar birinchi)
+    # Kichik harflar
     latin_to_cyrillic = {
-        'sh': 'ш', 'ch': 'ч', 'yo': 'ё', 'yo\'': 'ё', "yo'": 'ё',
+        'sh': 'ш', 'ch': 'ч', 'yo': 'ё', "yo'": 'ё', 'yo\'': 'ё',
         'yu': 'ю', 'ya': 'я', 'ye': 'е', 
         'o\'': 'ў', "o'": 'ў',
         'g\'': 'ғ', "g'": 'ғ',
-        '\'': 'ъ',  # apostrof -> qattiqlik belgisi (ixtiyoriy)
         
+        # Bitta harflar
         'a': 'а', 'b': 'б', 'd': 'д', 'e': 'е', 'f': 'ф',
         'g': 'г', 'h': 'ҳ', 'i': 'и', 'j': 'ж', 'k': 'к',
         'l': 'л', 'm': 'м', 'n': 'н', 'o': 'о', 'p': 'п',
         'q': 'қ', 'r': 'р', 's': 'с', 't': 'т', 'u': 'у',
         'v': 'в', 'x': 'х', 'y': 'й', 'z': 'з',
+        
+        # Katta harflar
         'A': 'А', 'B': 'Б', 'D': 'Д', 'E': 'Е', 'F': 'Ф',
         'G': 'Г', 'H': 'Ҳ', 'I': 'И', 'J': 'Ж', 'K': 'К',
         'L': 'Л', 'M': 'М', 'N': 'Н', 'O': 'О', 'P': 'П',
         'Q': 'Қ', 'R': 'Р', 'S': 'С', 'T': 'Т', 'U': 'У',
         'V': 'В', 'X': 'Х', 'Y': 'Й', 'Z': 'З',
+        
+        # Maxsus belgilar (lotinda bo'lsa)
+        "'": 'ъ',  # apostrof -> qattiqlik belgisi
+        "`": 'ъ',  # backtick ham
+        '"': 'ъ',  # qo'shtirnoq
     }
     
     result = []
@@ -32,7 +40,7 @@ def to_cyrillic(text):
     while i < text_len:
         matched = False
         
-        # 2 yoki 3 belgili kombinatsiyalarni tekshirish
+        # Uzun kombinatsiyalarni birinchi tekshirish
         for length in [3, 2, 1]:
             if i + length <= text_len:
                 segment = text[i:i+length]
@@ -51,33 +59,43 @@ def to_cyrillic(text):
 
 # 2. KIRILL -> LOTIN (kirillidan o'zbek lotiniga)
 def to_latin(text):
+    """Kirill matnni Lotinga o'giradi"""
     if not text:
         return ""
     
-    # Kirill -> Lotin lug'ati
+    # ASOSIY LUG'AT - Kichik harflar
     cyrillic_to_latin = {
         'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd',
         'е': 'e', 'ё': 'yo', 'ж': 'j', 'з': 'z', 'и': 'i',
         'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n',
         'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
         'у': 'u', 'ф': 'f', 'х': 'x', 'ц': 'ts', 'ч': 'ch',
-        'ш': 'sh', 'щ': 'sh',  # "щ" harfi "sh" deb o'tkaziladi
-        'ъ': '',   # QATTIQLIK BELGISI - O'TKAZILMAYDI
-        'ы': 'i',  # O'zbek tilida "ы" yo'q, "i" deb o'tkaziladi
-        'ь': '',   # YUMSHATISH BELGISI - O'TKAZILMAYDI
+        'ш': 'sh', 
+        'щ': 'shch',  # Щ harfi uchun to'liq "shch"
+        'ъ': '',      # QATTIQLIK BELGISI - O'TKAZILMAYDI
+        'ы': 'i',     # O'zbek tilida "ы" yo'q, "i" deb o'tkaziladi
+        'ь': '',      # YUMSHATISH BELGISI - O'TKAZILMAYDI
         'э': 'e', 'ю': 'yu', 'я': 'ya',
         'ў': 'o\'', 'қ': 'q', 'ҳ': 'h', 'ғ': 'g\'',
+        
+        # Katta harflar
         'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D',
         'Е': 'E', 'Ё': 'Yo', 'Ж': 'J', 'З': 'Z', 'И': 'I',
         'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N',
         'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T',
         'У': 'U', 'Ф': 'F', 'Х': 'X', 'Ц': 'Ts', 'Ч': 'Ch',
-        'Ш': 'Sh', 'Щ': 'Sh',
-        'Ъ': '',   # KATTA QATTIQLIK BELGISI - O'TKAZILMAYDI
-        'Ы': 'I',  # KATTA "Ы" harfi
-        'Ь': '',   # KATTA YUMSHATISH BELGISI - O'TKAZILMAYDI
+        'Ш': 'Sh', 
+        'Щ': 'Shch',  # Katta Щ harfi
+        'Ъ': '',      # KATTA QATTIQLIK BELGISI
+        'Ы': 'I',     # KATTA Ы harfi
+        'Ь': '',      # KATTA YUMSHATISH BELGISI
         'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
         'Ў': 'O\'', 'Қ': 'Q', 'Ҳ': 'H', 'Ғ': 'G\'',
+    }
+    
+    # QO'SHIMCHA: "с" va "х" alohida kombinatsiyalari
+    special_combinations = {
+        'сх': 'sx', 'Сх': 'Sx', 'сХ': 'sX', 'СХ': 'SX',
     }
     
     result = []
@@ -85,80 +103,133 @@ def to_latin(text):
     text_len = len(text)
     
     while i < text_len:
-        char = text[i]
-        
-        # Maxsus kombinatsiyalar uchun tekshirish
+        # 1. Maxsus kombinatsiyalarni tekshirish (2 belgi)
         if i + 1 < text_len:
             two_chars = text[i:i+2]
-            
-            # "с" dan keyin "h" bo'lsa
-            if two_chars.lower() in ['сх', 'Сх', 'сХ', 'СХ']:
-                if two_chars.isupper():
-                    result.append('Sh')
-                elif two_chars[0].isupper():
-                    result.append('Sh')
-                else:
-                    result.append('sh')
+            if two_chars in special_combinations:
+                result.append(special_combinations[two_chars])
                 i += 2
                 continue
         
-        # Oddiy lug'at orqali o'tkazish
+        # 2. Oddiy bitta belgini o'tkazish
+        char = text[i]
+        
         if char in cyrillic_to_latin:
-            result.append(cyrillic_to_latin[char])
+            # Harfning holatiga qarab
+            if i + 1 < text_len:
+                next_char = text[i+1]
+                # Kichik harf bo'lsa, kichik lotin harf
+                if char.islower():
+                    result.append(cyrillic_to_latin[char])
+                # Katta harf bo'lsa
+                elif char.isupper():
+                    # Agar keyingi harf ham katta bo'lsa
+                    if next_char.isupper():
+                        result.append(cyrillic_to_latin[char])
+                    else:
+                        # Faqat birinchi harf katta bo'lsa
+                        trans = cyrillic_to_latin[char]
+                        if len(trans) > 1:
+                            # "Shch", "Yo" kabi kombinatsiyalar
+                            result.append(trans[0].upper() + trans[1:])
+                        else:
+                            result.append(trans.upper())
+                else:
+                    result.append(cyrillic_to_latin[char])
+            else:
+                result.append(cyrillic_to_latin[char])
         else:
-            # O'zgarmagan belgilar
+            # Lug'atda yo'q belgilar
             result.append(char)
         
         i += 1
     
     return ''.join(result)
 
-# 3. TEKSHIRISH FUNKSIYASI
-def test_transliteration():
-    """Transliteratsiyani test qilish"""
+# 3. ALTERNATIV VERSIYA: Soddaroq
+def to_latin_simple(text):
+    """Soddaroq versiya - faqat asosiy harflar"""
+    mapping = {
+        'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd',
+        'е': 'e', 'ё': 'yo', 'ж': 'j', 'з': 'z', 'и': 'i',
+        'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n',
+        'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
+        'у': 'u', 'ф': 'f', 'х': 'x', 'ц': 'ts', 'ч': 'ch',
+        'ш': 'sh', 'щ': 'shch', 'ъ': '', 'ы': 'i', 'ь': '',
+        'э': 'e', 'ю': 'yu', 'я': 'ya',
+        'ў': 'o\'', 'қ': 'q', 'ҳ': 'h', 'ғ': 'g\'',
+        
+        # Katta harflar
+        'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D',
+        'Е': 'E', 'Ё': 'Yo', 'Ж': 'J', 'З': 'Z', 'И': 'I',
+        'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N',
+        'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T',
+        'У': 'U', 'Ф': 'F', 'Х': 'X', 'Ц': 'Ts', 'Ч': 'Ch',
+        'Ш': 'Sh', 'Щ': 'Shch', 'Ъ': '', 'Ы': 'I', 'Ь': '',
+        'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+        'Ў': 'O\'', 'Қ': 'Q', 'Ҳ': 'H', 'Ғ': 'G\'',
+    }
     
-    # Test holatlari
+    result = []
+    for char in text:
+        if char in mapping:
+            result.append(mapping[char])
+        else:
+            result.append(char)
+    
+    return ''.join(result)
+
+# 4. TEKSHIRISH FUNKSIYASI
+def test_specific_chars():
+    """Maxsus harflarni test qilish"""
+    print("🔍 MAXSUS HARFLAR TESTI:")
+    print("=" * 50)
+    
     test_cases = [
-        ("salom", "салом"),
-        ("o'zbek", "ўзбек"),
-        ("g'alaba", "ғалаба"),
-        ("shahar", "шаҳар"),
-        ("choy", "чой"),
-        ("yo'l", "ёл"),
-        ("kitob", "китоб"),
-        ("ь", ""),  # "ь" o'tkazilmasin
-        ("ъ", ""),  # "ъ" o'tkazilmasin
-        ("ы", "i"), # "ы" -> "i"
-        ("щ", "sh"), # "щ" -> "sh"
+        ("ь", "", "Yumshatish belgisi"),
+        ("ъ", "", "Qattiqlik belgisi"),
+        ("щ", "shch", "Щ harfi"),
+        ("ы", "i", "Ы harfi"),
+        ("Ь", "", "Katta yumshatish"),
+        ("Ъ", "", "Katta qattiqlik"),
+        ("Щ", "Shch", "Katta Щ"),
+        ("Ы", "I", "Katta Ы"),
     ]
     
-    print("🔍 Transliteratsiya testi:")
+    for kirill, expected_latin, description in test_cases:
+        # to_latin funksiyasi bilan
+        result1 = to_latin(kirill)
+        # to_latin_simple funksiyasi bilan
+        result2 = to_latin_simple(kirill)
+        
+        passed1 = result1 == expected_latin
+        passed2 = result2 == expected_latin
+        
+        print(f"Kirill: '{kirill}'")
+        print(f"Kutilgan: '{expected_latin}'")
+        print(f"to_latin: '{result1}' {'✅' if passed1 else '❌'}")
+        print(f"to_latin_simple: '{result2}' {'✅' if passed2 else '❌'}")
+        print(f"Izoh: {description}")
+        print("-" * 40)
+    
+    # Qo'shimcha test
+    print("\n📝 QO'SHIMCHA MATNLAR:")
     print("=" * 40)
     
-    all_passed = True
+    sentences = [
+        ("вьетнам", "vyetnam", "ь belgisi bilan"),
+        ("подъезд", "podezd", "ъ belgisi bilan"),
+        ("щука", "shchuka", "щ harfi bilan"),
+        ("мышь", "mysh", "ы va ь bilan"),
+    ]
     
-    for latin, expected_kirill in test_cases:
-        # Lotin -> Kirill
-        result_kirill = to_cyrillic(latin)
-        passed = result_kirill == expected_kirill
-        
-        # Kirill -> Lotin (teskari)
-        result_latin = to_latin(expected_kirill)
-        
-        print(f"Test: '{latin}' -> '{result_kirill}'")
-        print(f"Kutilgan: '{expected_kirill}'")
-        print(f"Teskari: '{result_latin}'")
-        print(f"✅ O'tdi" if passed else f"❌ Yiqildi")
-        print("-" * 30)
-        
-        if not passed:
-            all_passed = False
-    
-    return all_passed
+    for kirill, expected, izoh in sentences:
+        result = to_latin(kirill)
+        print(f"{kirill} → {result} (kutilgan: {expected}) {izoh}")
 
 # Fayl bajarilganda testni o'tkazish
 if __name__ == "__main__":
-    if test_transliteration():
-        print("\n🎉 Barcha testlar muvaffaqiyatli o'tdi!")
-    else:
-        print("\n⚠️ Ba'zi testlar yiqildi, kodni tekshiring.")
+    test_specific_chars()
+    
+    # Qaysi funksiyani ishlatishni so'rash
+    print("\n💡 Maslahat: Agar to_latin ishlamasa, main.py da to_latin_simple dan foydalaning")

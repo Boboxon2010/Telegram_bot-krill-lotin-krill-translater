@@ -39,11 +39,17 @@ print("✅ Bot yaratildi")
 
 # =========== TRANSLITERATION FUNKSIYALARI ===========
 try:
-    with open('uz_trans.py', 'r', encoding='utf-8') as f:
-        exec(f.read(), globals())
+    # Ikkala funksiyani ham import qilish
+    from uz_trans import to_cyrillic, to_latin, to_latin_simple
     print("✅ Transliteration funksiyalari yuklandi")
+    
+    # Agar to_latin ishlamasa, to_latin_simple ishlatish
+    print("ℹ️ Test: 'ь' ->", to_latin('ь'))
+    print("ℹ️ Test: 'щ' ->", to_latin('щ'))
+    print("ℹ️ Test: 'ъ' ->", to_latin('ъ'))
+    
 except Exception as e:
-    print(f"❌ uz_trans.py yuklashda xato: {e}")
+    print(f"❌ uz_trans yuklashda xato: {e}")
     exit(1)
 
 # =========== YORDAMCHI FUNKSIYALAR ===========
