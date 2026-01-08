@@ -361,7 +361,6 @@ def convert_text(message):
 
 📏 *Uzunligi:* {len(text):,} belgi
 
-⭐ *Botni baholang:* /rate
 🔗 *Ulashish:* /share
 🌍 *Tarjima:* /translate
 """
@@ -390,7 +389,6 @@ def callback_handler(call):
 *Qo'shimcha:*
 • /admin - Admin paneli (faqat admin)
 • /broadcast - Reklama tarqatish (faqat admin)
-• /rate - Botni baholash
 """
         bot.answer_callback_query(call.id)
         bot.send_message(call.message.chat.id, help_text, parse_mode='Markdown')
@@ -500,7 +498,6 @@ def commands_list(message):
 • /test - Botni test qilish
 • /webapp - Web App manzili
 • /translate - Tarjima xizmati
-• /rate - Botni baholash
 • /users - Foydalanuvchilar (admin)
 • /admin - Admin paneli (admin)
 • /broadcast - Reklama (admin)
