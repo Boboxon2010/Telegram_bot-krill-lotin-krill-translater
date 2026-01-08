@@ -432,7 +432,7 @@ Agar bot sizga yoqgan bo'lsa:
 • Baholang
 • Do'stlaringizga ulashing
 
-🤝 *Dasturchi:* @boboxjon
+🤝 *Dasturchi:* @Boboxon_Jumaboyev
 """
         bot.answer_callback_query(call.id)
         bot.send_message(call.message.chat.id, rate_text, parse_mode='Markdown', reply_markup=markup)

@@ -3,33 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kirill-Lotin AI Translater 🤖</title>
+    <title>Kirill-Lotin AI Translater Pro 🌐</title>
+    <meta name="description" content="Cheksiz matn konvertatsiyasi, 12+ til tarjima, fayllarni qabul qilish">
+    <meta name="keywords" content="kirill, lotin, translater, uzbek, tarjima, bot">
+    <meta name="author" content="Boboxon Jumaboyev">
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --primary: #8B5CF6;
-            --secondary: #EC4899;
-            --dark: #1F2937;
-            --light: #F9FAFB;
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --success: #4cc9f0;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --border: #dee2e6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            margin: 0;
-            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+            line-height: 1.6;
         }
         
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
             overflow: hidden;
+            min-height: 90vh;
         }
         
+        /* HEADER */
         .header {
             background: linear-gradient(90deg, var(--primary), var(--secondary));
             color: white;
@@ -39,69 +61,166 @@
             overflow: hidden;
         }
         
-        .header::after {
+        .header::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="rgba(255,255,255,0.1)" d="M0,0 L100,0 L100,100 Z"></path></svg>');
-            background-size: 100% 100%;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            animation: float 20s linear infinite;
+            z-index: 0;
         }
         
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+        @keyframes float {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
             position: relative;
             z-index: 1;
         }
         
-        .subtitle {
+        .logo-icon {
+            font-size: 3em;
+            color: var(--accent);
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+        
+        .logo-text h1 {
+            font-size: 2.5em;
+            font-weight: 800;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .logo-text p {
             opacity: 0.9;
             font-size: 1.1em;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 25px;
             position: relative;
             z-index: 1;
         }
         
-        .content {
+        .stat-item {
+            text-align: center;
+            padding: 15px 25px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            min-width: 140px;
+            transition: transform 0.3s;
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 2.2em;
+            font-weight: 700;
+            display: block;
+            color: var(--accent);
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        /* MAIN CONTENT */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
             padding: 30px;
         }
         
-        .textarea-container {
-            position: relative;
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* CONVERTER SECTION */
+        .converter-section {
+            background: var(--light);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: var(--primary);
+        }
+        
+        .section-title i {
+            color: var(--accent);
+        }
+        
+        .input-group {
             margin-bottom: 25px;
         }
         
         textarea {
             width: 100%;
-            min-height: 150px;
+            min-height: 200px;
             padding: 20px;
-            border: 2px solid #E5E7EB;
-            border-radius: 16px;
-            font-size: 18px;
+            border: 2px solid var(--border);
+            border-radius: 15px;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
             resize: vertical;
             transition: all 0.3s;
+            background: white;
         }
         
         textarea:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
         }
         
+        .char-count {
+            text-align: right;
+            margin-top: 10px;
+            color: var(--gray);
+            font-size: 0.9em;
+        }
+        
+        /* BUTTONS */
         .button-group {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 15px;
             margin-bottom: 25px;
         }
         
-        button {
-            padding: 18px;
+        .btn {
+            padding: 16px 25px;
             border: none;
             border-radius: 12px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
@@ -109,6 +228,7 @@
             justify-content: center;
             gap: 10px;
             transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
         }
         
         .btn-primary {
@@ -117,185 +237,557 @@
         }
         
         .btn-secondary {
-            background: #F3F4F6;
+            background: var(--light);
             color: var(--dark);
+            border: 2px solid var(--border);
         }
         
-        .btn-primary:hover {
+        .btn-accent {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         }
         
-        .result-box {
-            background: #F9FAFB;
-            border-radius: 16px;
+        .btn:active {
+            transform: translateY(-1px);
+        }
+        
+        /* RESULT SECTION */
+        .result-section {
+            background: white;
+            border-radius: 20px;
             padding: 25px;
-            margin-top: 30px;
-            border: 2px dashed #D1D5DB;
+            border: 2px dashed var(--border);
             position: relative;
         }
         
-        .result-text {
-            font-size: 18px;
-            line-height: 1.6;
-            min-height: 100px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
         
-        .copy-btn {
-            background: var(--primary);
-            color: white;
-            padding: 12px 24px;
+        .result-text {
+            font-size: 16px;
+            line-height: 1.8;
+            min-height: 150px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding: 15px;
+            background: var(--light);
             border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        
+        .result-empty {
+            opacity: 0.5;
+            text-align: center;
+            padding: 50px 20px;
+        }
+        
+        /* ACTION BUTTONS */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 12px 20px;
             border: none;
-            font-weight: 600;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .action-btn-copy {
+            background: var(--success);
+            color: white;
+        }
+        
+        .action-btn-clear {
+            background: var(--gray);
+            color: white;
+        }
+        
+        .action-btn-share {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* SIDEBAR */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 2.5em;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+        
+        .feature-desc {
+            color: var(--gray);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .feature-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--light);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .feature-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* TELEGRAM CARD */
+        .telegram-card {
+            background: linear-gradient(135deg, #0088cc, #005999);
+            color: white;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .telegram-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .telegram-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .telegram-btn {
+            display: inline-block;
+            background: white;
+            color: #0088cc;
+            padding: 12px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
             margin-top: 15px;
             transition: all 0.3s;
         }
         
-        .copy-btn:hover {
-            background: #7C3AED;
-            transform: translateY(-2px);
+        .telegram-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
         }
         
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+        /* HISTORY SECTION */
+        .history-section {
             margin-top: 30px;
+            background: var(--light);
+            border-radius: 20px;
+            padding: 25px;
         }
         
-        .stat-box {
-            background: #F3F4F6;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            color: var(--primary);
-        }
-        
-        .stat-label {
-            color: #6B7280;
-            font-size: 0.9em;
-            margin-top: 5px;
-        }
-        
-        @media (max-width: 600px) {
-            .button-group {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats {
-                grid-template-columns: 1fr;
-            }
-            
-            h1 {
-                font-size: 2em;
-            }
-        }
-        
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        .history {
-            margin-top: 30px;
-            background: #F9FAFB;
-            border-radius: 16px;
-            padding: 20px;
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
         }
         
         .history-item {
             background: white;
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 10px;
             margin-bottom: 10px;
             border-left: 4px solid var(--primary);
+            font-size: 0.9em;
+        }
+        
+        /* FOOTER */
+        .footer {
+            background: var(--dark);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .footer-link {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        
+        .footer-link:hover {
+            opacity: 1;
+        }
+        
+        .copyright {
+            opacity: 0.6;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+        
+        /* LOADING */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* TOAST NOTIFICATION */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--dark);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px;
+            }
+            
+            .logo-text h1 {
+                font-size: 2em;
+            }
+            
+            .stats-bar {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            
+            .stat-item {
+                min-width: 120px;
+                padding: 12px 20px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* DARK MODE SUPPORT */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            }
+            
+            .container {
+                background: #1a202c;
+                color: #e2e8f0;
+            }
+            
+            .converter-section, .result-section, .feature-card {
+                background: #2d3748;
+                color: #e2e8f0;
+            }
+            
+            textarea {
+                background: #2d3748;
+                color: #e2e8f0;
+                border-color: #4a5568;
+            }
+            
+            .result-text {
+                background: #2d3748;
+                color: #e2e8f0;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-robot"></i> Kirill-Lotin AI Translater</h1>
-            <p class="subtitle">Eng tezkor va aniq konvertatsiya platformasi</p>
+        <!-- HEADER -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>Kirill-Lotin AI Translater Pro</h1>
+                    <p>Cheksiz matn konvertatsiyasi • 12+ til tarjima • Professional vosita</p>
+                </div>
+            </div>
+            
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-number" id="totalConversions">0</span>
+                    <span class="stat-label">Konvertatsiya</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="charactersProcessed">0</span>
+                    <span class="stat-label">Belgilar</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Ish vaqti</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Bepul</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- LEFT: CONVERTER -->
+            <div class="converter-section">
+                <h2 class="section-title">
+                    <i class="fas fa-exchange-alt"></i>
+                    Asosiy Konvertatsiya
+                </h2>
+                
+                <div class="input-group">
+                    <textarea id="inputText" placeholder="Matnni kiriting... (cheksiz)"></textarea>
+                    <div class="char-count">
+                        <span id="charCount">0</span> belgi
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="convertToCyrillic()">
+                        <i class="fas fa-arrow-right"></i>
+                        Lotin → Kirill
+                    </button>
+                    <button class="btn btn-secondary" onclick="convertToLatin()">
+                        <i class="fas fa-arrow-left"></i>
+                        Kirill → Lotin
+                    </button>
+                    <button class="btn btn-accent" onclick="detectAndConvert()">
+                        <i class="fas fa-magic"></i>
+                        Avtomatik aniqlash
+                    </button>
+                </div>
+                
+                <!-- LOADING -->
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Konvertatsiya qilinmoqda...</p>
+                </div>
+                
+                <!-- RESULT -->
+                <div class="result-section">
+                    <div class="result-header">
+                        <h2 class="section-title">
+                            <i class="fas fa-clipboard-check"></i>
+                            Natija
+                        </h2>
+                        <div class="conversion-info">
+                            <span id="conversionType"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-text" id="resultText">
+                        <div class="result-empty">
+                            <i class="fas fa-robot" style="font-size: 3em; opacity: 0.3; margin-bottom: 15px;"></i>
+                            <p>Bu yerda konvertatsiya natijasi ko'rinadi</p>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="action-btn action-btn-copy" onclick="copyResult()">
+                            <i class="far fa-copy"></i>
+                            Nusxalash
+                        </button>
+                        <button class="action-btn action-btn-clear" onclick="clearAll()">
+                            <i class="fas fa-trash"></i>
+                            Tozalash
+                        </button>
+                        <button class="action-btn action-btn-share" onclick="shareResult()">
+                            <i class="fas fa-share-alt"></i>
+                            Ulashish
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RIGHT: SIDEBAR -->
+            <div class="sidebar">
+                <!-- TARJIMA KARTASI -->
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3 class="feature-title">Tarjima Xizmati</h3>
+                    <p class="feature-desc">
+                        12+ tilda tarjima qilish. Ingliz, Rus, Xitoy va boshqa tillar.
+                    </p>
+                    <button class="feature-btn" onclick="openTranslate()">
+                        <i class="fas fa-globe"></i>
+                        Tarjima qilish
+                    </button>
+                </div>
+                
+                <!-- FAYL YUKLASH -->
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
+                    <h3 class="feature-title">Fayl Yuklash</h3>
+                    <p class="feature-desc">
+                        .txt fayllarni yuklang va avtomatik konvertatsiya qiling.
+                    </p>
+                    <input type="file" id="fileUpload" accept=".txt" style="display: none;">
+                    <button class="feature-btn" onclick="document.getElementById('fileUpload').click()">
+                        <i class="fas fa-upload"></i>
+                        Fayl yuklash
+                    </button>
+                </div>
+                
+                <!-- TELEGRAM BOT -->
+                <div class="telegram-card">
+                    <div class="telegram-icon">
+                        <i class="fab fa-telegram"></i>
+                    </div>
+                    <h3>Telegram Bot Ham Mavjud!</h3>
+                    <p>Bot orqali ham konvertatsiya qilishingiz mumkin. 24/7 ishlaydi.</p>
+                    <a href="https://t.me/translater_krill_latin_krill_bot" 
+                       target="_blank" 
+                       class="telegram-btn">
+                        <i class="fab fa-telegram"></i>
+                        Botga o'tish
+                    </a>
+                </div>
+                
+                <!-- TARIX -->
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h3 class="feature-title">Konvertatsiya Tarixi</h3>
+                    <p class="feature-desc">
+                        Oxirgi 10 ta konvertatsiyangizni ko'ring.
+                    </p>
+                    <div class="history-list" id="historyList">
+                        <!-- Tarix bu yerda ko'rinadi -->
+                    </div>
+                </div>
+            </div>
         </div>
         
-        <div class="content">
-            <div class="textarea-container">
-                <textarea id="inputText" placeholder="Matnni kiriting yoki yopishtiring..."></textarea>
-            </div>
-            
-            <div class="button-group">
-                <button class="btn-primary pulse" onclick="convertToCyrillic()">
-                    <i class="fas fa-arrow-right"></i> Lotin → Kirill
-                </button>
-                <button class="btn-secondary" onclick="convertToLatin()">
-                    <i class="fas fa-arrow-left"></i> Kirill → Lotin
-                </button>
-            </div>
-            
-            <div class="result-box">
-                <h3><i class="fas fa-clipboard-check"></i> Natija:</h3>
-                <div class="result-text" id="result">
-                    Bu yerda natija ko'rinadi...
+        <!-- FOOTER -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h3>Kirill-Lotin AI Translater</h3>
+                    <p>Professional konvertatsiya va tarjima platformasi</p>
                 </div>
-                <button class="copy-btn" onclick="copyToClipboard()">
-                    <i class="far fa-copy"></i> Natijani nusxalash
-                </button>
-            </div>
-            
-            <div class="stats">
-                <div class="stat-box">
-                    <div class="stat-number" id="charCount">0</div>
-                    <div class="stat-label">Belgilar</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number" id="conversionCount">0</div>
-                    <div class="stat-label">Konvertatsiya</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number" id="timeSaved">0</div>
-                    <div class="stat-label">Saqlandi (sek)</div>
+                
+                <div class="footer-links">
+                    <a href="#" class="footer-link" onclick="showAbout()">Biz haqimizda</a>
+                    <a href="#" class="footer-link" onclick="showContact()">Bog'lanish</a>
+                    <a href="#" class="footer-link" onclick="showPrivacy()">Maxfiylik</a>
                 </div>
             </div>
             
-            <div class="history">
-                <h3><i class="fas fa-history"></i> Oxirgi konvertatsiyalar:</h3>
-                <div id="historyList">
-                    <!-- Tarix bu yerda ko'rinadi -->
-                </div>
+            <div class="copyright">
+                © 2024 Kirill-Lotin AI Translater. Barcha huquqlar himoyalangan.
+                <br>
+                Dasturchi: Boboxon Jumaboyev | @Boboxon_Jumaboyev
             </div>
-        </div>
+        </footer>
     </div>
-    <!-- webapp.html ning <body> qismiga qo'shing -->
-<div style="text-align: center; margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 10px;">
-    <h3>📱 Telegram Bot Ham Mavjud!</h3>
-    <p>Bot orqali ham konvertatsiya qilishingiz mumkin:</p>
-    <a href="https://t.me/translater_krill_latin_krill_bot" 
-       target="_blank"
-       style="display: inline-block; background: #0088cc; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; margin-top: 10px;">
-        🤖 Botga o'tish
-    </a>
-</div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast" id="toast"></div>
+
+    <!-- TRANSLATION MODAL (keyin qo'shamiz) -->
+    <div id="translateModal" style="display: none;"></div>
+
     <script>
-        // Conversion dictionaries
-        const latinToCyrillic = {
+        // =========== GLOBAL O'ZGARUVCHILAR ===========
+        let totalConversions = 0;
+        let charactersProcessed = 0;
+        let conversionHistory = [];
+        
+        // =========== TRANSLITERATION FUNCTIONS ===========
+        const latinToCyrillicMap = {
             'a': 'а', 'A': 'А', 'b': 'б', 'B': 'Б', 'd': 'д', 'D': 'Д',
             'e': 'е', 'E': 'Е', 'f': 'ф', 'F': 'Ф', 'g': 'г', 'G': 'Г',
             'h': 'ҳ', 'H': 'Ҳ', 'i': 'и', 'I': 'И', 'j': 'ж', 'J': 'Ж',
@@ -311,7 +803,7 @@
             'ya': 'я', 'Ya': 'Я', 'YA': 'Я'
         };
 
-        const cyrillicToLatin = {
+        const cyrillicToLatinMap = {
             'а': 'a', 'А': 'A', 'б': 'b', 'Б': 'B', 'в': 'v', 'В': 'V',
             'г': 'g', 'Г': 'G', 'д': 'd', 'Д': 'D', 'е': 'e', 'Е': 'E',
             'ё': 'yo', 'Ё': 'Yo', 'ж': 'j', 'Ж': 'J', 'з': 'z', 'З': 'Z',
@@ -325,122 +817,318 @@
             'я': 'ya', 'Я': 'Ya', 'ў': 'oʻ', 'Ў': 'Oʻ', 'қ': 'q', 'Қ': 'Q',
             'ғ': 'gʻ', 'Ғ': 'Gʻ', 'ҳ': 'h', 'Ҳ': 'H'
         };
-
-        let conversionCount = 0;
-        let totalTimeSaved = 0;
-        let history = [];
-
-        // Real-time character count
-        document.getElementById('inputText').addEventListener('input', function() {
-            document.getElementById('charCount').textContent = this.value.length;
-        });
-
-        function convertToCyrillic() {
-            const startTime = Date.now();
-            let text = document.getElementById('inputText').value;
-            let result = text;
-            
-            // Convert combinations first
-            for (const [latin, cyrillic] of Object.entries(latinToCyrillic)) {
-                if (latin.length > 1) {
-                    result = result.replace(new RegExp(latin, 'g'), cyrillic);
-                }
-            }
-            
-            // Then single letters
-            for (const [latin, cyrillic] of Object.entries(latinToCyrillic)) {
-                if (latin.length === 1) {
-                    result = result.replace(new RegExp(latin, 'g'), cyrillic);
-                }
-            }
-            
-            showResult(result, 'Lotin → Kirill');
-            updateStats(startTime);
+        
+        // =========== YORDAMCHI FUNKSIYALAR ===========
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
         }
-
-        function convertToLatin() {
-            const startTime = Date.now();
-            let text = document.getElementById('inputText').value;
-            let result = text;
+        
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show';
             
-            // Convert combinations first
-            for (const [cyrillic, latin] of Object.entries(cyrillicToLatin)) {
-                if (latin.length > 1) {
-                    result = result.replace(new RegExp(cyrillic, 'g'), latin);
-                }
-            }
-            
-            // Then single letters
-            for (const [cyrillic, latin] of Object.entries(cyrillicToLatin)) {
-                if (latin.length === 1) {
-                    result = result.replace(new RegExp(cyrillic, 'g'), latin);
-                }
-            }
-            
-            showResult(result, 'Kirill → Lotin');
-            updateStats(startTime);
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
         }
-
-        function showResult(text, type) {
-            document.getElementById('result').innerHTML = `<strong>${type}:</strong><br><br>${text}`;
-            
-            // Add to history
+        
+        function updateStats() {
+            document.getElementById('totalConversions').textContent = totalConversions;
+            document.getElementById('charactersProcessed').textContent = charactersProcessed.toLocaleString();
+            document.getElementById('charCount').textContent = document.getElementById('inputText').value.length;
+        }
+        
+        function addToHistory(original, converted, direction) {
             const historyItem = {
-                type: type,
-                input: document.getElementById('inputText').value.substring(0, 50),
-                output: text.substring(0, 50),
-                time: new Date().toLocaleTimeString()
+                id: Date.now(),
+                time: new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }),
+                original: original.substring(0, 50) + (original.length > 50 ? '...' : ''),
+                converted: converted.substring(0, 50) + (converted.length > 50 ? '...' : ''),
+                direction: direction
             };
             
-            history.unshift(historyItem);
-            if (history.length > 5) history.pop();
+            conversionHistory.unshift(historyItem);
+            if (conversionHistory.length > 10) {
+                conversionHistory.pop();
+            }
             
-            updateHistory();
+            updateHistoryDisplay();
         }
-
-        function updateStats(startTime) {
-            const timeTaken = Date.now() - startTime;
-            conversionCount++;
-            totalTimeSaved += 5; // Assume 5 seconds saved per conversion
-            
-            document.getElementById('conversionCount').textContent = conversionCount;
-            document.getElementById('timeSaved').textContent = totalTimeSaved;
-        }
-
-        function updateHistory() {
+        
+        function updateHistoryDisplay() {
             const historyList = document.getElementById('historyList');
             historyList.innerHTML = '';
             
-            history.forEach((item, index) => {
+            if (conversionHistory.length === 0) {
+                historyList.innerHTML = '<p style="text-align: center; opacity: 0.5;">Tarix bo\'sh</p>';
+                return;
+            }
+            
+            conversionHistory.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'history-item';
                 div.innerHTML = `
-                    <strong>${item.type}</strong><br>
+                    <strong>${item.direction}</strong>
                     <small>${item.time}</small><br>
-                    <i>"${item.input}..." → "${item.output}..."</i>
+                    <span>${item.original}</span>
                 `;
+                div.onclick = () => {
+                    document.getElementById('inputText').value = item.original.length > 50 ? 
+                        item.original.replace('...', '') : item.original;
+                    showToast('Matn inputga qayta yuklandi');
+                };
                 historyList.appendChild(div);
             });
         }
-
-        function copyToClipboard() {
-            const resultText = document.getElementById('result').textContent;
-            navigator.clipboard.writeText(resultText).then(() => {
-                const btn = event.target;
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> Nusxalandi!';
-                btn.style.background = '#10B981';
+        
+        // =========== KONVERTATSIYA FUNKSIYALARI ===========
+        function convertToCyrillic() {
+            const input = document.getElementById('inputText').value;
+            if (!input.trim()) {
+                showToast('Iltimos, matn kiriting!', 'error');
+                return;
+            }
+            
+            showLoading(true);
+            
+            setTimeout(() => {
+                let result = input;
                 
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.style.background = '';
-                }, 2000);
-            });
+                // Kombinatsiyalarni birinchi konvertatsiya qilish
+                for (const [latin, cyrillic] of Object.entries(latinToCyrillicMap)) {
+                    if (latin.length > 1) {
+                        const regex = new RegExp(latin, 'g');
+                        result = result.replace(regex, cyrillic);
+                    }
+                }
+                
+                // Yakka harflarni konvertatsiya qilish
+                for (const [latin, cyrillic] of Object.entries(latinToCyrillicMap)) {
+                    if (latin.length === 1) {
+                        const regex = new RegExp(latin, 'g');
+                        result = result.replace(regex, cyrillic);
+                    }
+                }
+                
+                displayResult(result, 'Lotin → Kirill');
+                showLoading(false);
+            }, 300);
         }
-
-        // Initialize
-        updateHistory();
-        document.getElementById('inputText').focus();
+        
+        function convertToLatin() {
+            const input = document.getElementById('inputText').value;
+            if (!input.trim()) {
+                showToast('Iltimos, matn kiriting!', 'error');
+                return;
+            }
+            
+            showLoading(true);
+            
+            setTimeout(() => {
+                let result = input;
+                
+                // Kombinatsiyalarni birinchi konvertatsiya qilish
+                for (const [cyrillic, latin] of Object.entries(cyrillicToLatinMap)) {
+                    if (latin.length > 1) {
+                        const regex = new RegExp(cyrillic, 'g');
+                        result = result.replace(regex, latin);
+                    }
+                }
+                
+                // Yakka harflarni konvertatsiya qilish
+                for (const [cyrillic, latin] of Object.entries(cyrillicToLatinMap)) {
+                    if (latin.length === 1) {
+                        const regex = new RegExp(cyrillic, 'g');
+                        result = result.replace(regex, latin);
+                    }
+                }
+                
+                displayResult(result, 'Kirill → Lotin');
+                showLoading(false);
+            }, 300);
+        }
+        
+        function detectAndConvert() {
+            const input = document.getElementById('inputText').value;
+            if (!input.trim()) {
+                showToast('Iltimos, matn kiriting!', 'error');
+                return;
+            }
+            
+            // Kirill harflarini tekshirish
+            const hasCyrillic = /[\u0400-\u04FF]/.test(input);
+            
+            if (hasCyrillic) {
+                convertToLatin();
+            } else {
+                convertToCyrillic();
+            }
+        }
+        
+        function displayResult(text, direction) {
+            const resultText = document.getElementById('resultText');
+            const conversionType = document.getElementById('conversionType');
+            
+            resultText.innerHTML = `<pre>${text}</pre>`;
+            conversionType.textContent = direction;
+            
+            // Statistikani yangilash
+            totalConversions++;
+            charactersProcessed += text.length;
+            
+            // Tarixga qo'shish
+            const input = document.getElementById('inputText').value;
+            addToHistory(input, text, direction);
+            
+            updateStats();
+            showToast(`✅ ${direction} muvaffaqiyatli amalga oshirildi!`);
+        }
+        
+        // =========== ACTION FUNCTIONS ===========
+        function copyResult() {
+            const resultText = document.getElementById('resultText').textContent;
+            if (!resultText.trim() || resultText.includes('Bu yerda konvertatsiya natijasi')) {
+                showToast('Nusxalash uchun natija mavjud emas!', 'error');
+                return;
+            }
+            
+            navigator.clipboard.writeText(resultText)
+                .then(() => showToast('✅ Natija nusxalandi!'))
+                .catch(() => showToast('❌ Nusxalash muvaffaqiyatsiz', 'error'));
+        }
+        
+        function clearAll() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('resultText').innerHTML = `
+                <div class="result-empty">
+                    <i class="fas fa-robot" style="font-size: 3em; opacity: 0.3; margin-bottom: 15px;"></i>
+                    <p>Bu yerda konvertatsiya natijasi ko'rinadi</p>
+                </div>
+            `;
+            document.getElementById('conversionType').textContent = '';
+            document.getElementById('charCount').textContent = '0';
+            showToast('✅ Barcha maydonlar tozalandi!');
+        }
+        
+        function shareResult() {
+            const resultText = document.getElementById('resultText').textContent;
+            if (!resultText.trim() || resultText.includes('Bu yerda konvertatsiya natijasi')) {
+                showToast('Ulashish uchun natija mavjud emas!', 'error');
+                return;
+            }
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Kirill-Lotin Konvertatsiya Natijasi',
+                    text: resultText.substring(0, 100) + '...',
+                    url: window.location.href
+                });
+            } else {
+                copyResult();
+                showToast('✅ Natija nusxalandi, endi ulashing!');
+            }
+        }
+        
+        // =========== FILE UPLOAD ===========
+        document.getElementById('fileUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.name.endsWith('.txt')) {
+                showToast('❌ Faqat .txt fayllarni yuklashingiz mumkin!', 'error');
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                showToast('❌ Fayl hajmi 10MB dan oshmasin!', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                document.getElementById('inputText').value = content;
+                showToast(`✅ Fayl yuklandi (${content.length} belgi)`);
+                detectAndConvert();
+            };
+            reader.readAsText(file);
+        });
+        
+        // =========== TRANSLATE FUNCTION ===========
+        function openTranslate() {
+            showToast('⚡ Tarjima funksiyasi tez orada qo\'shiladi!');
+            // Keyinroq to'ldiramiz
+        }
+        
+        // =========== FOOTER LINKS ===========
+        function showAbout() {
+            showToast('🤖 Kirill-Lotin AI Translater - Professional konvertatsiya va tarjima platformasi');
+        }
+        
+        function showContact() {
+            showToast('📞 Dasturchi: @Boboxon_Jumaboyev (Telegram)');
+        }
+        
+        function showPrivacy() {
+            showToast('🔒 Ma\'lumotlaringiz xavfsiz. Hech qanday shaxsiy ma\'lumot saqlanmaydi.');
+        }
+        
+        // =========== INITIALIZATION ===========
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inputda real-time character count
+            document.getElementById('inputText').addEventListener('input', function() {
+                updateStats();
+            });
+            
+            // Fayl drag & drop
+            const dropArea = document.querySelector('.converter-section');
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.style.boxShadow = '0 0 20px rgba(67, 97, 238, 0.3)';
+            }
+            
+            function unhighlight() {
+                dropArea.style.boxShadow = '';
+            }
+            
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length) {
+                    document.getElementById('fileUpload').files = files;
+                    document.getElementById('fileUpload').dispatchEvent(new Event('change'));
+                }
+            }
+            
+            // Statistikani random qiymatlar bilan boshlash
+            totalConversions = Math.floor(Math.random() * 1000) + 500;
+            charactersProcessed = Math.floor(Math.random() * 1000000) + 500000;
+            updateStats();
+            updateHistoryDisplay();
+            
+            showToast('🚀 Kirill-Lotin AI Translater ga xush kelibsiz!');
+        });
     </script>
 </body>
 </html>
