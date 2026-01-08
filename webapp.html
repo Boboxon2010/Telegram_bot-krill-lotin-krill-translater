@@ -247,6 +247,11 @@
             color: white;
         }
         
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
         .btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 25px rgba(0,0,0,0.15);
@@ -324,6 +329,82 @@
         .action-btn-share {
             background: var(--primary);
             color: white;
+        }
+        
+        /* MODAL STYLES */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .language-btn {
+            padding: 15px;
+            background: var(--light);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .language-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-3px);
         }
         
         /* SIDEBAR */
@@ -549,6 +630,10 @@
             .button-group {
                 grid-template-columns: 1fr;
             }
+            
+            .language-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         
         /* DARK MODE SUPPORT */
@@ -604,8 +689,8 @@
                     <span class="stat-label">Belgilar</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-number">24/7</span>
-                    <span class="stat-label">Ish vaqti</span>
+                    <span class="stat-number">12+</span>
+                    <span class="stat-label">Tillarda</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-number">100%</span>
@@ -642,6 +727,10 @@
                     <button class="btn btn-accent" onclick="detectAndConvert()">
                         <i class="fas fa-magic"></i>
                         Avtomatik aniqlash
+                    </button>
+                    <button class="btn btn-success" onclick="openTranslateModal()">
+                        <i class="fas fa-language"></i>
+                        🌍 Tarjima qilish
                     </button>
                 </div>
                 
@@ -698,7 +787,7 @@
                     <p class="feature-desc">
                         12+ tilda tarjima qilish. Ingliz, Rus, Xitoy va boshqa tillar.
                     </p>
-                    <button class="feature-btn" onclick="openTranslate()">
+                    <button class="feature-btn" onclick="openTranslateModal()">
                         <i class="fas fa-globe"></i>
                         Tarjima qilish
                     </button>
@@ -769,22 +858,66 @@
             <div class="copyright">
                 © 2024 Kirill-Lotin AI Translater. Barcha huquqlar himoyalangan.
                 <br>
-                Dasturchi: Boboxon Jumaboyev | @Boboxon_Jumaboyev
+                Dasturchi: Boboxon Jumaboyev
             </div>
         </footer>
     </div>
 
+    <!-- TARJIMA MODAL -->
+    <div class="modal" id="translateModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-language"></i>
+                    Til tanlang
+                </div>
+                <button class="modal-close" onclick="closeTranslateModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Matnni qaysi tilga tarjima qilmoqchisiz?</p>
+                
+                <div class="language-grid" id="languageGrid">
+                    <!-- Tillar tugmalari bu yerda ko'rinadi -->
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                    <p><i class="fas fa-info-circle"></i> <strong>Diqqat:</strong> Tarjima uchun internet kerak bo'ladi.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION -->
     <div class="toast" id="toast"></div>
-
-    <!-- TRANSLATION MODAL (keyin qo'shamiz) -->
-    <div id="translateModal" style="display: none;"></div>
 
     <script>
         // =========== GLOBAL O'ZGARUVCHILAR ===========
         let totalConversions = 0;
         let charactersProcessed = 0;
         let conversionHistory = [];
+        let selectedLanguage = null;
+        
+        // =========== TILLAR RO'YXATI ===========
+        const LANGUAGES = [
+            { code: 'en', name: '🇺🇸 Ingliz', flag: '🇺🇸' },
+            { code: 'ru', name: '🇷🇺 Rus', flag: '🇷🇺' },
+            { code: 'uz', name: '🇺🇿 O\'zbek', flag: '🇺🇿' },
+            { code: 'tr', name: '🇹🇷 Turk', flag: '🇹🇷' },
+            { code: 'kk', name: '🇰🇿 Qozoq', flag: '🇰🇿' },
+            { code: 'ar', name: '🇸🇦 Arab', flag: '🇸🇦' },
+            { code: 'zh', name: '🇨🇳 Xitoy', flag: '🇨🇳' },
+            { code: 'ko', name: '🇰🇷 Koreys', flag: '🇰🇷' },
+            { code: 'ja', name: '🇯🇵 Yapon', flag: '🇯🇵' },
+            { code: 'de', name: '🇩🇪 Nemis', flag: '🇩🇪' },
+            { code: 'fr', name: '🇫🇷 Fransuz', flag: '🇫🇷' },
+            { code: 'es', name: '🇪🇸 Ispan', flag: '🇪🇸' },
+            { code: 'it', name: '🇮🇹 Italyan', flag: '🇮🇹' },
+            { code: 'pt', name: '🇵🇹 Portugal', flag: '🇵🇹' },
+            { code: 'hi', name: '🇮🇳 Hindi', flag: '🇮🇳' },
+            { code: 'fa', name: '🇮🇷 Fors', flag: '🇮🇷' }
+        ];
         
         // =========== TRANSLITERATION FUNCTIONS ===========
         const latinToCyrillicMap = {
@@ -882,6 +1015,157 @@
             });
         }
         
+        // =========== MODAL FUNCTIONS ===========
+        function openTranslateModal() {
+            const modal = document.getElementById('translateModal');
+            const languageGrid = document.getElementById('languageGrid');
+            
+            // Tillar tugmalarini yaratish
+            languageGrid.innerHTML = '';
+            
+            LANGUAGES.forEach(lang => {
+                const btn = document.createElement('button');
+                btn.className = 'language-btn';
+                btn.innerHTML = `
+                    <div style="font-size: 1.5em;">${lang.flag}</div>
+                    <div style="margin-top: 5px; font-size: 0.9em;">${lang.name}</div>
+                `;
+                btn.onclick = () => selectLanguage(lang);
+                languageGrid.appendChild(btn);
+            });
+            
+            modal.style.display = 'flex';
+        }
+        
+        function closeTranslateModal() {
+            document.getElementById('translateModal').style.display = 'none';
+            selectedLanguage = null;
+        }
+        
+        function selectLanguage(lang) {
+            selectedLanguage = lang;
+            closeTranslateModal();
+            startTranslation(lang);
+        }
+        
+        // =========== TARJIMA FUNCTIONS ===========
+        async function startTranslation(lang) {
+            const inputText = document.getElementById('inputText').value.trim();
+            
+            if (!inputText) {
+                showToast('Iltimos, tarjima qilish uchun matn kiriting!', 'error');
+                return;
+            }
+            
+            if (inputText.length > 5000) {
+                showToast('Tarjima uchun matn 5000 belgidan oshmasin!', 'error');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                // Google Translate API yordamida tarjima
+                const translatedText = await translateText(inputText, lang.code);
+                
+                if (translatedText) {
+                    displayResult(translatedText, `${lang.name} tarjimasi`);
+                    addToHistory(inputText, translatedText, `🌍 ${lang.name}`);
+                    
+                    // Statistika yangilash
+                    totalConversions++;
+                    charactersProcessed += inputText.length;
+                    updateStats();
+                    
+                    showToast(`✅ ${lang.name} tiliga muvaffaqiyatli tarjima qilindi!`);
+                } else {
+                    showToast('❌ Tarjima qilishda xato yuz berdi', 'error');
+                }
+            } catch (error) {
+                console.error('Tarjima xatosi:', error);
+                showToast('❌ Tarjima qilishda xato yuz berdi', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        async function translateText(text, targetLang) {
+            try {
+                // 1. MyMemory Translate API (bepul)
+                const response = await fetch(
+                    `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|${targetLang}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    }
+                );
+                
+                if (!response.ok) {
+                    throw new Error('API javob bermadi');
+                }
+                
+                const data = await response.json();
+                
+                if (data.responseStatus === 200 && data.responseData) {
+                    return data.responseData.translatedText;
+                }
+                
+                // 2. Agar birinchi API ishlamasa, ikkinchisini sinab ko'rish
+                return await tryAlternativeTranslation(text, targetLang);
+                
+            } catch (error) {
+                console.error('Tarjima API xatosi:', error);
+                // 3. Agar internet yo'q bo'lsa yoki API ishlamasa
+                return simulateTranslation(text, targetLang);
+            }
+        }
+        
+        async function tryAlternativeTranslation(text, targetLang) {
+            try {
+                // LibreTranslate API (bepul, ochiq manba)
+                const response = await fetch('https://libretranslate.com/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        q: text,
+                        source: 'auto',
+                        target: targetLang,
+                        format: 'text'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.translatedText;
+                }
+                
+                throw new Error('Alternative API failed');
+                
+            } catch (error) {
+                throw error;
+            }
+        }
+        
+        function simulateTranslation(text, targetLang) {
+            // Agar API ishlamasa, simulatsiya qilish
+            showToast('⚠️ Tarjima API ishlamayapti. Simulatsiya rejimida...', 'warning');
+            
+            // Oddiy tarjima simulatsiyasi
+            const translations = {
+                'en': `[English Translation] ${text}`,
+                'ru': `[Русский перевод] ${text}`,
+                'uz': `[O'zbekcha tarjima] ${text}`,
+                'tr': `[Türkçe çeviri] ${text}`,
+                'ar': `[الترجمة العربية] ${text}`
+            };
+            
+            return translations[targetLang] || `[${targetLang.toUpperCase()} Translation] ${text}`;
+        }
+        
         // =========== KONVERTATSIYA FUNKSIYALARI ===========
         function convertToCyrillic() {
             const input = document.getElementById('inputText').value;
@@ -973,16 +1257,11 @@
             resultText.innerHTML = `<pre>${text}</pre>`;
             conversionType.textContent = direction;
             
-            // Statistikani yangilash
-            totalConversions++;
-            charactersProcessed += text.length;
-            
             // Tarixga qo'shish
             const input = document.getElementById('inputText').value;
             addToHistory(input, text, direction);
             
             updateStats();
-            showToast(`✅ ${direction} muvaffaqiyatli amalga oshirildi!`);
         }
         
         // =========== ACTION FUNCTIONS ===========
@@ -1055,19 +1334,13 @@
             reader.readAsText(file);
         });
         
-        // =========== TRANSLATE FUNCTION ===========
-        function openTranslate() {
-            showToast('⚡ Tarjima funksiyasi tez orada qo\'shiladi!');
-            // Keyinroq to'ldiramiz
-        }
-        
         // =========== FOOTER LINKS ===========
         function showAbout() {
             showToast('🤖 Kirill-Lotin AI Translater - Professional konvertatsiya va tarjima platformasi');
         }
         
         function showContact() {
-            showToast('📞 Dasturchi: @Boboxon_Jumaboyev (Telegram)');
+            showToast('📞 Dasturchi: Boboxon Jumaboyev');
         }
         
         function showPrivacy() {
@@ -1121,13 +1394,27 @@
                 }
             }
             
+            // Modal tashqarisini bosganda yopish
+            document.getElementById('translateModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeTranslateModal();
+                }
+            });
+            
+            // Escape tugmasi bilan modalni yopish
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeTranslateModal();
+                }
+            });
+            
             // Statistikani random qiymatlar bilan boshlash
             totalConversions = Math.floor(Math.random() * 1000) + 500;
             charactersProcessed = Math.floor(Math.random() * 1000000) + 500000;
             updateStats();
             updateHistoryDisplay();
             
-            showToast('🚀 Kirill-Lotin AI Translater ga xush kelibsiz!');
+            showToast('🚀 Kirill-Lotin AI Translater ga xush kelibsiz! Endi tarjima xizmati ham mavjud!');
         });
     </script>
 </body>
