@@ -1,10 +1,8 @@
-# stats.py - TO'LIQ STATISTIKA SERVERI
+# stats.py - PANDAS SIZ VERSIYA
 from flask import Flask, render_template, jsonify, send_from_directory
 import json
 import os
 from datetime import datetime, timedelta
-import threading
-import time
 
 app = Flask(__name__, 
             static_folder='static',
@@ -49,7 +47,7 @@ def save_stats(stats):
         return False
 
 def update_stats(action_type, user_id=None, characters=0):
-    """Statistikani yangilash"""
+    """Statistikani yangilash (pandas siz)"""
     stats = get_stats()
     
     # Asosiy statistika
@@ -63,20 +61,17 @@ def update_stats(action_type, user_id=None, characters=0):
         stats["total_translations"] = stats.get("total_translations", 0) + 1
     
     # Foydalanuvchi qo'shish
-    if user_id and user_id not in stats.get("users", []):
-        stats["users"] = stats.get("users", [])
-        stats["users"].append(str(user_id))
+    if user_id and str(user_id) not in stats.get("users", []):
+        stats.setdefault("users", []).append(str(user_id))
     
     # Kunlik statistika
     today = datetime.now().strftime("%Y-%m-%d")
     hour = datetime.now().strftime("%H:00")
     
     # Daily stats
-    if "daily_stats" not in stats:
-        stats["daily_stats"] = {}
-    
-    if today not in stats["daily_stats"]:
-        stats["daily_stats"][today] = {
+    daily_stats = stats.setdefault("daily_stats", {})
+    if today not in daily_stats:
+        daily_stats[today] = {
             "conversions": 0,
             "characters": 0,
             "users": [],
@@ -84,25 +79,20 @@ def update_stats(action_type, user_id=None, characters=0):
             "translations": 0
         }
     
-    stats["daily_stats"][today]["conversions"] += 1
-    stats["daily_stats"][today]["characters"] += characters
+    daily_stats[today]["conversions"] += 1
+    daily_stats[today]["characters"] += characters
     
     if action_type == "file":
-        stats["daily_stats"][today]["files"] += 1
+        daily_stats[today]["files"] += 1
     elif action_type == "translation":
-        stats["daily_stats"][today]["translations"] += 1
+        daily_stats[today]["translations"] += 1
     
-    if user_id and str(user_id) not in stats["daily_stats"][today]["users"]:
-        stats["daily_stats"][today]["users"].append(str(user_id))
+    if user_id and str(user_id) not in daily_stats[today]["users"]:
+        daily_stats[today]["users"].append(str(user_id))
     
     # Soatlik statistika
-    if "hourly_stats" not in stats:
-        stats["hourly_stats"] = {}
-    
-    if hour not in stats["hourly_stats"]:
-        stats["hourly_stats"][hour] = 0
-    
-    stats["hourly_stats"][hour] += 1
+    hourly_stats = stats.setdefault("hourly_stats", {})
+    hourly_stats[hour] = hourly_stats.get(hour, 0) + 1
     
     # Top foydalanuvchilar
     update_top_users(stats, user_id)
@@ -112,35 +102,33 @@ def update_stats(action_type, user_id=None, characters=0):
     return stats
 
 def update_top_users(stats, user_id):
-    """Top foydalanuvchilarni yangilash"""
+    """Top foydalanuvchilarni yangilash (pandas siz)"""
     if not user_id:
         return
     
     user_id_str = str(user_id)
+    top_users = stats.setdefault("top_users", [])
     
-    # Top users array mavjudligini tekshirish
-    if "top_users" not in stats:
-        stats["top_users"] = []
-    
-    # Foydalanuvchini topish yoki qo'shish
+    # Foydalanuvchini topish
     user_found = False
-    for user in stats["top_users"]:
+    for user in top_users:
         if user["id"] == user_id_str:
             user["count"] = user.get("count", 0) + 1
             user_found = True
             break
     
+    # Yangi foydalanuvchi
     if not user_found:
-        stats["top_users"].append({
+        top_users.append({
             "id": user_id_str,
             "count": 1,
             "first_seen": datetime.now().strftime("%Y-%m-%d")
         })
     
-    # Sort by count (descending)
-    stats["top_users"] = sorted(stats["top_users"], 
-                                key=lambda x: x["count"], 
-                                reverse=True)[:10]
+    # Saralash (pandas siz)
+    stats["top_users"] = sorted(top_users, 
+                               key=lambda x: x["count"], 
+                               reverse=True)[:10]
 
 # =========== FLASK ROUTES ===========
 
@@ -158,11 +146,17 @@ def index():
     
     # Oxirgi 7 kun statistikasi
     daily_stats = stats.get("daily_stats", {})
-    last_7_days = sorted(daily_stats.items(), reverse=True)[:7]
+    
+    # Kunlarni saralash (pandas siz)
+    sorted_days = sorted(daily_stats.items(), key=lambda x: x[0], reverse=True)
+    last_7_days = sorted_days[:7]
     
     # Soatlik statistika (oxirgi 24 soat)
     hourly_stats = stats.get("hourly_stats", {})
-    last_24_hours = sorted(hourly_stats.items(), reverse=True)[:24]
+    
+    # Soatlarni saralash (pandas siz)
+    sorted_hours = sorted(hourly_stats.items(), key=lambda x: x[0], reverse=True)
+    last_24_hours = sorted_hours[:24]
     
     # Top foydalanuvchilar
     top_users = stats.get("top_users", [])[:5]
@@ -222,25 +216,21 @@ def api_hourly():
     """API: Soatlik statistika"""
     stats = get_stats()
     
-    # Oxirgi 24 soat
+    # Oxirgi 24 soat (pandas siz)
     last_24_hours = {}
+    now = datetime.now()
+    
     for i in range(24):
-        hour = (datetime.now() - timedelta(hours=i)).strftime("%H:00")
-        last_24_hours[hour] = stats.get("hourly_stats", {}).get(hour, 0)
+        hour_time = now - timedelta(hours=i)
+        hour_key = hour_time.strftime("%H:00")
+        last_24_hours[hour_key] = stats.get("hourly_stats", {}).get(hour_key, 0)
+    
+    # Saralash
+    sorted_hours = dict(sorted(last_24_hours.items(), reverse=True))
     
     return jsonify({
         "success": True,
-        "data": last_24_hours
-    })
-
-@app.route('/api/users')
-def api_users():
-    """API: Foydalanuvchilar"""
-    stats = get_stats()
-    return jsonify({
-        "success": True,
-        "total": len(stats.get("users", [])),
-        "users": stats.get("users", [])[:100]  # Faqat birinchi 100 tasi
+        "data": sorted_hours
     })
 
 @app.route('/api/update', methods=['POST'])
@@ -267,33 +257,6 @@ def api_update():
             "error": str(e)
         }), 400
 
-@app.route('/dashboard')
-def dashboard():
-    """Dashboard sahifasi"""
-    return render_template('dashboard.html')
-
-@app.route('/live')
-def live_stats():
-    """Real-time statistika"""
-    return render_template('live.html')
-
-@app.route('/export')
-def export_data():
-    """Ma'lumotlarni yuklab olish"""
-    stats = get_stats()
-    
-    export_data = {
-        "export_date": datetime.now().isoformat(),
-        "statistics": stats,
-        "summary": {
-            "total_conversions": stats.get("total_conversions", 0),
-            "total_users": len(stats.get("users", [])),
-            "total_characters": stats.get("total_characters", 0)
-        }
-    }
-    
-    return jsonify(export_data)
-
 # =========== STATIC FILES ===========
 
 @app.route('/static/<path:path>')
@@ -301,18 +264,26 @@ def serve_static(path):
     """Static fayllarni server qilish"""
     return send_from_directory('static', path)
 
+# =========== ERROR HANDLERS ===========
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"error": "Sahifa topilmadi"}), 404
+
+@app.errorhandler(500)
+def server_error(error):
+    return jsonify({"error": "Server xatosi"}), 500
+
 # =========== MAIN ===========
 
 if __name__ == '__main__':
     # Data papkasini yaratish
     os.makedirs('data', exist_ok=True)
     os.makedirs('templates', exist_ok=True)
-    os.makedirs('static/css', exist_ok=True)
-    os.makedirs('static/js', exist_ok=True)
     
     print("📊 Statistika serveri ishga tushmoqda...")
     print("🌐 Dashboard: http://localhost:5001")
     print("📈 API: http://localhost:5001/api/stats")
     
     port = int(os.environ.get('PORT', 5001))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)

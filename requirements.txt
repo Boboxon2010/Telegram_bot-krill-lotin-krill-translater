@@ -5,8 +5,8 @@ python-dotenv==1.0.0
 gunicorn==20.1.0
 deep-translator==1.11.4
 
-# Statistika sayti uchun qo'shimchalar
+# Statistika sayti uchun (pandas o'rniga oddiy kutubxonalar)
 requests==2.31.0
 aiohttp==3.9.1
-pandas==2.1.4
-numpy==1.24.3
+
+# numpy o'rniga alternativ (agar kerak bo'lsa)
