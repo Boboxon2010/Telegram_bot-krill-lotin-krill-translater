@@ -30,12 +30,16 @@ def get_token():
         pass
     
     print("❌ BOT_TOKEN topilmadi!")
-    sys.exit(1)
+    return None
 
 # =========== BOTNI YARATISH ===========
 TOKEN = get_token()
-bot = telebot.TeleBot(TOKEN)
-print("✅ Bot yaratildi")
+if TOKEN:
+    bot = telebot.TeleBot(TOKEN)
+    print("✅ Bot yaratildi")
+else:
+    bot = None
+    print("⚠️ BOT_TOKEN yo'q - bot ishga tushmaydi")
 
 # =========== TRANSLITERATION FUNKSIYALARI ===========
 try:
@@ -505,15 +509,28 @@ def commands_list(message):
     bot.reply_to(message, commands_text, parse_mode='Markdown')
 
 # =========== BOTNI ISHGA TUSHIRISH ===========
-if __name__ == "__main__":
+def start_bot():
+    """Start polling the Telegram bot. Designed to be run in a background thread.
+
+    Returns immediately if BOT_TOKEN is not configured.
+    """
+    if bot is None:
+        print("⚠️ BOT_TOKEN yo'q - bot ishga tushmaydi")
+        return
+
     print("\n" + "="*50)
     print("🚀 BOT ISHGA TUSHMOQDA...")
     print(f"🤖 Bot: @translater_krill_latin_krill_bot")
     print(f"🌐 Web App: {WEB_APP_URL}")
     print(f"👑 Admin ID: {ADMIN_IDS}")
     print("="*50)
-    
-    try:
-        bot.polling(none_stop=True, interval=0)
-    except Exception as e:
-        print(f"❌ Botda xato: {e}")
+
+    # Start polling with basic retry loop to survive transient errors
+    while True:
+        try:
+            bot.polling(none_stop=True, interval=0)
+        except Exception as e:
+            print(f"❌ Botda xato: {e}")
+            # Backoff before restarting polling
+            import time
+            time.sleep(5)
