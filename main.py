@@ -7,6 +7,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime
 import tempfile
 import uuid
+import time
 
 print("=== KIRILL-LOTIN AI TRANSLATER BOT ===")
 
@@ -307,32 +308,62 @@ try:
         bot.register_next_step_handler(msg, process_translation, lang_code, lang_name)
         bot.answer_callback_query(call.id)
     
+    def _split_translation_text(text, limit=4500):
+        """Split long input without losing words or newlines."""
+        chunks = []
+        remaining = text.strip()
+        while remaining:
+            if len(remaining) <= limit:
+                chunks.append(remaining)
+                break
+
+            cut = remaining.rfind("\n", 0, limit)
+            if cut < limit // 2:
+                cut = remaining.rfind(" ", 0, limit)
+            if cut < limit // 2:
+                cut = limit
+
+            chunks.append(remaining[:cut].rstrip())
+            remaining = remaining[cut:].lstrip()
+        return chunks
+
+    def _translate_with_retry(text, lang_code, attempts=3):
+        last_error = None
+        for attempt in range(attempts):
+            try:
+                return GoogleTranslator(source='auto', target=lang_code).translate(text)
+            except Exception as error:
+                last_error = error
+                if attempt < attempts - 1:
+                    time.sleep(2 ** attempt)
+        raise last_error
+
     def process_translation(message, lang_code, lang_name):
+        text = message.text or ""
+        if not text.strip():
+            bot.reply_to(message, "❌ Matn yuboring!")
+            return
+
         try:
-            text = message.text
-            
-            if not text.strip():
-                bot.reply_to(message, "❌ Matn yuboring!")
-                return
-            
-            translator = GoogleTranslator(source='auto', target=lang_code)
-            translated_text = translator.translate(text)
-            
-            response = f"""
-🌐 *Tarjima natijasi:*
+            translated_chunks = [
+                _translate_with_retry(chunk, lang_code)
+                for chunk in _split_translation_text(text)
+            ]
+            translated_text = "\n".join(translated_chunks)
+            response = (
+                "🌐 Tarjima natijasi:\n\n"
+                f"🔤 {lang_name}:\n{translated_text}\n\n"
+                f"📝 Asl matn:\n{text}\n\n"
+                f"💬 Uzunligi: {len(text)} → {len(translated_text)} belgi"
+            )
 
-🔤 *{lang_name}:*
-`{translated_text}`
-
-📝 *Asl matn:*
-`{text}`
-
-💬 *Uzunligi:* {len(text)} → {len(translated_text)} belgi
-"""
-            bot.reply_to(message, response, parse_mode='Markdown')
-            
-        except Exception as e:
-            bot.reply_to(message, f"❌ Tarjimada xato: {str(e)[:100]}")
+            # Telegram messages are limited to 4096 characters.
+            response_chunks = _split_translation_text(response, limit=3900)
+            for index, chunk in enumerate(response_chunks):
+                bot.reply_to(message, chunk if index == 0 else f"🌐 Davomi:\n{chunk}")
+        except Exception as error:
+            error_text = str(error).strip() or "noma'lum xato"
+            bot.reply_to(message, f"❌ Tarjimada xato: {error_text[:300]}")
 
 except ImportError:
     @bot.message_handler(commands=['translate'])
