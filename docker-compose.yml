@@ -1,0 +1,7 @@
+services:
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    container_name: krill-lotin-libretranslate
+    ports:
+      - "5000:5000"
+    restart: unless-stopped

@@ -9,6 +9,7 @@ import tempfile
 import uuid
 import time
 import threading
+import requests
 
 print("=== KIRILL-LOTIN AI TRANSLATER BOT ===")
 
@@ -248,7 +249,7 @@ Jami: {len(users)} ta
 
 # 5. TARJIMA XIZMATI
 try:
-    from deep_translator import GoogleTranslator
+    LIBRETRANSLATE_URL = os.environ.get("LIBRETRANSLATE_URL", "http://127.0.0.1:5000").rstrip("/")
 
     _translation_lock = threading.Lock()
     _last_translation_request = 0.0
@@ -261,7 +262,7 @@ try:
         '🇹🇷 Turkish': 'tr',
         '🇰🇿 Kazakh': 'kk',
         '🇸🇦 Arabic': 'ar',
-        '🇨🇳 Chinese': 'zh-CN',
+        '🇨🇳 Chinese': 'zh',
         '🇰🇷 Korean': 'ko',
         '🇯🇵 Japanese': 'ja',
         '🇩🇪 German': 'de',
@@ -333,22 +334,29 @@ try:
         return chunks
 
     def _translate_with_retry(text, lang_code, attempts=3):
-        global _last_translation_request
         last_error = None
         for attempt in range(attempts):
             try:
-                with _translation_lock:
-                    wait_time = _translation_min_interval - (
-                        time.monotonic() - _last_translation_request
-                    )
-                    if wait_time > 0:
-                        time.sleep(wait_time)
-                    _last_translation_request = time.monotonic()
-                    return GoogleTranslator(source='auto', target=lang_code).translate(text)
+                response = requests.post(
+                    f"{LIBRETRANSLATE_URL}/translate",
+                    json={
+                        "q": text,
+                        "source": "auto",
+                        "target": lang_code,
+                        "format": "text",
+                    },
+                    timeout=60,
+                )
+                if response.ok:
+                    translated_text = response.json().get("translatedText")
+                    if translated_text:
+                        return translated_text
+                response.raise_for_status()
+                raise RuntimeError("LibreTranslate bo'sh javob qaytardi")
             except Exception as error:
                 last_error = error
                 if attempt < attempts - 1:
-                    time.sleep(5 * (2 ** attempt))
+                    time.sleep(3 * (2 ** attempt))
         raise last_error
 
     def process_translation(message, lang_code, lang_name):
@@ -376,8 +384,8 @@ try:
                 bot.reply_to(message, chunk if index == 0 else f"🌐 Davomi:\n{chunk}")
         except Exception as error:
             error_text = str(error).strip() or "noma'lum xato"
-            if "too many requests" in error_text.lower() or "5 requests per second" in error_text.lower():
-                error_text = "Google tarjima limiti vaqtincha to'ldi. 1-2 daqiqadan keyin qayta urinib ko'ring."
+            if "connection refused" in error_text.lower() or "failed to establish" in error_text.lower():
+                error_text = "LibreTranslate ishlamayapti. Docker xizmatini ishga tushiring."
             bot.reply_to(message, f"❌ Tarjimada xato: {error_text[:300]}")
 
 except ImportError:
