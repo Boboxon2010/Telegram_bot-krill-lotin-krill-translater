@@ -1100,7 +1100,10 @@
             const chunks = splitTextForTranslation(text, 4500);
             const translated = [];
 
-            for (const chunk of chunks) {
+            for (const [index, chunk] of chunks.entries()) {
+                if (index > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 1300));
+                }
                 translated.push(await translateChunkWithRetry(chunk, targetLang));
             }
 
@@ -1131,11 +1134,11 @@
                 } catch (error) {
                     lastError = error;
                     if (attempt < attempts - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                        await new Promise(resolve => setTimeout(resolve, [3000, 10000][attempt] || 30000));
                     }
                 }
             }
-            throw lastError || new Error('Tarjima xizmati javob bermadi');
+            throw new Error('Tarjima xizmatlari vaqtincha band. Bir necha soniyadan keyin qayta urinib ko\'ring.');
         }
 
         async function translateChunk(text, targetLang) {
@@ -1183,7 +1186,7 @@
                     if (data.translatedText) return data.translatedText;
                 }
 
-                throw new Error('Alternative API failed');
+                throw new Error('Zaxira tarjima API ham javob bermadi');
 
             } catch (error) {
                 throw error;

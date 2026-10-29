@@ -8,6 +8,7 @@ from datetime import datetime
 import tempfile
 import uuid
 import time
+import threading
 
 print("=== KIRILL-LOTIN AI TRANSLATER BOT ===")
 
@@ -248,6 +249,10 @@ Jami: {len(users)} ta
 # 5. TARJIMA XIZMATI
 try:
     from deep_translator import GoogleTranslator
+
+    _translation_lock = threading.Lock()
+    _last_translation_request = 0.0
+    _translation_min_interval = 1.2
     
     LANGUAGES = {
         '🇺🇿 Uzbek': 'uz',
@@ -328,14 +333,22 @@ try:
         return chunks
 
     def _translate_with_retry(text, lang_code, attempts=3):
+        global _last_translation_request
         last_error = None
         for attempt in range(attempts):
             try:
-                return GoogleTranslator(source='auto', target=lang_code).translate(text)
+                with _translation_lock:
+                    wait_time = _translation_min_interval - (
+                        time.monotonic() - _last_translation_request
+                    )
+                    if wait_time > 0:
+                        time.sleep(wait_time)
+                    _last_translation_request = time.monotonic()
+                    return GoogleTranslator(source='auto', target=lang_code).translate(text)
             except Exception as error:
                 last_error = error
                 if attempt < attempts - 1:
-                    time.sleep(2 ** attempt)
+                    time.sleep(5 * (2 ** attempt))
         raise last_error
 
     def process_translation(message, lang_code, lang_name):
@@ -363,6 +376,8 @@ try:
                 bot.reply_to(message, chunk if index == 0 else f"🌐 Davomi:\n{chunk}")
         except Exception as error:
             error_text = str(error).strip() or "noma'lum xato"
+            if "too many requests" in error_text.lower() or "5 requests per second" in error_text.lower():
+                error_text = "Google tarjima limiti vaqtincha to'ldi. 1-2 daqiqadan keyin qayta urinib ko'ring."
             bot.reply_to(message, f"❌ Tarjimada xato: {error_text[:300]}")
 
 except ImportError:
