@@ -558,6 +558,9 @@ def start_bot():
             bot.polling(none_stop=True, interval=0)
         except Exception as e:
             print(f"❌ Botda xato: {e}")
-            # Backoff before restarting polling
             import time
-            time.sleep(5)
+            if getattr(e, "error_code", None) == 409:
+                print("⚠️ Shu BOT_TOKEN bilan boshqa polling jarayoni ishlayapti. 60 soniyadan keyin qayta tekshiriladi.")
+                time.sleep(60)
+            else:
+                time.sleep(5)
