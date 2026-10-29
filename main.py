@@ -1,17 +1,19 @@
 # main.py - FAQAT REKLAMA VA ADMIN TUZATILGAN
-import sys
 import os
 import json
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-from datetime import datetime
-import tempfile
-import uuid
-import time
-import threading
-import requests
+from translation_service import TranslationService, TranslationServiceError
 
 print("=== KIRILL-LOTIN AI TRANSLATER BOT ===")
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+translation_service = TranslationService()
 
 # =========== SOZLAMALAR ===========
 ADMIN_IDS = [1051632082]  # SIZNING ID'INGIZ
@@ -249,12 +251,6 @@ Jami: {len(users)} ta
 
 # 5. TARJIMA XIZMATI
 try:
-    LIBRETRANSLATE_URL = os.environ.get("LIBRETRANSLATE_URL", "http://127.0.0.1:5000").rstrip("/")
-
-    _translation_lock = threading.Lock()
-    _last_translation_request = 0.0
-    _translation_min_interval = 1.2
-    
     LANGUAGES = {
         '🇺🇿 Uzbek': 'uz',
         '🇷🇺 Russian': 'ru', 
@@ -333,31 +329,8 @@ try:
             remaining = remaining[cut:].lstrip()
         return chunks
 
-    def _translate_with_retry(text, lang_code, attempts=3):
-        last_error = None
-        for attempt in range(attempts):
-            try:
-                response = requests.post(
-                    f"{LIBRETRANSLATE_URL}/translate",
-                    json={
-                        "q": text,
-                        "source": "auto",
-                        "target": lang_code,
-                        "format": "text",
-                    },
-                    timeout=60,
-                )
-                if response.ok:
-                    translated_text = response.json().get("translatedText")
-                    if translated_text:
-                        return translated_text
-                response.raise_for_status()
-                raise RuntimeError("LibreTranslate bo'sh javob qaytardi")
-            except Exception as error:
-                last_error = error
-                if attempt < attempts - 1:
-                    time.sleep(3 * (2 ** attempt))
-        raise last_error
+    def _translate_with_retry(text, lang_code):
+        return translation_service.translate(text, lang_code)
 
     def process_translation(message, lang_code, lang_name):
         text = message.text or ""
@@ -382,11 +355,11 @@ try:
             response_chunks = _split_translation_text(response, limit=3900)
             for index, chunk in enumerate(response_chunks):
                 bot.reply_to(message, chunk if index == 0 else f"🌐 Davomi:\n{chunk}")
-        except Exception as error:
+        except TranslationServiceError as error:
             error_text = str(error).strip() or "noma'lum xato"
-            if "connection refused" in error_text.lower() or "failed to establish" in error_text.lower():
-                error_text = "LibreTranslate ishlamayapti. Docker xizmatini ishga tushiring."
-            bot.reply_to(message, f"❌ Tarjimada xato: {error_text[:300]}")
+            bot.reply_to(message, "❌ Tarjima xizmatlari vaqtincha band. Keyingi xizmat avtomatik sinaldi.")
+        except Exception as error:
+            bot.reply_to(message, f"❌ Tarjimada xato: {str(error)[:300]}")
 
 except ImportError:
     @bot.message_handler(commands=['translate'])

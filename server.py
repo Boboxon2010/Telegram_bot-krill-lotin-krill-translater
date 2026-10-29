@@ -1,8 +1,7 @@
 from flask import Flask, send_from_directory, jsonify, request
 import os
 import threading
-import time
-import requests
+from translation_service import TranslationService, TranslationServiceError
 
 # Load environment variables from .env if available
 try:
@@ -13,9 +12,7 @@ except Exception:
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 STATIC_FOLDER = os.path.join(APP_ROOT, 'static')
-LIBRETRANSLATE_URL = os.environ.get(
-    'LIBRETRANSLATE_URL', 'http://127.0.0.1:5000'
-).rstrip('/')
+translation_service = TranslationService()
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
@@ -49,25 +46,16 @@ def translate():
         return jsonify({'error': 'text va target majburiy'}), 400
 
     try:
-        response = requests.post(
-            f'{LIBRETRANSLATE_URL}/translate',
-            json={
-                'q': text,
-                'source': 'auto',
-                'target': target,
-                'format': 'text',
-            },
-            timeout=60,
-        )
-        response.raise_for_status()
-        result = response.json()
-        translated_text = result.get('translatedText')
-        if not translated_text:
-            return jsonify({'error': 'LibreTranslate bo\'sh javob qaytardi'}), 502
-        return jsonify({'translatedText': translated_text})
-    except requests.RequestException as error:
         return jsonify({
-            'error': 'LibreTranslate xizmatiga ulanib bo\'lmadi',
+            'translatedText': translation_service.translate(text, target),
+        })
+    except TranslationServiceError:
+        return jsonify({
+            'error': 'Barcha tarjima xizmatlari vaqtincha ishlamayapti',
+        }), 503
+    except Exception as error:
+        return jsonify({
+            'error': 'Tarjima xizmatida ichki xato',
             'details': str(error),
         }), 502
 
